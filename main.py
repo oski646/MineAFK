@@ -4,26 +4,38 @@ from pynput import keyboard as KeyboardManager
 import pygetwindow as gw
 import time
 import threading
-import config
-
+import configparser
+config = configparser.ConfigParser()
+config.read("config.ini")
 
 # Global variables
-stones = config.stones
-pickaxe = config.pickaxe
-food = config.food
-dropSlots = config.dropSlots
-rounds = config.rounds
-commands = config.commands
+stones = int(config["Config"]["stones"])
+pickaxe = int(config["Config"]["pickaxe"])
+food = int(config["Config"]["food"])
+dropSlots = config["Config"]["dropSlots"].split(",")
+rounds = int(config["Config"]["rounds"])
+commands = config["Config"]["commands"].split(",")
 
 # Welcome message
 print("")
-print("##################  MineAFK ##################")
+print("##################  MineAFK  ##################")
 print("")
 print("Autor: oski646")
 print("WWW: https://github.com/oski646")
 print("Jeśli chcesz tu coś zmieniać proszę bardzo, lecz pamiętaj o twórcy tego skryptu.")
 print("")
-print("##################  MineAFK ##################")
+print("##################  MineAFK  ##################")
+print("")
+
+print("## Konfiguracja ##")
+print("Ilość stoniarek - " + str(stones))
+print("Slot kilofa - " + str(pickaxe))
+print("Slot mięska - " + str(food))
+print("Sloty do wyrzucenia - " + str(dropSlots))
+print("Ilość tur do powtórzenia aktywności - " + str(rounds))
+print("Komendy do wykonania - " + str(commands))
+
+print("")
 print("")
 
 # STOP - DON'T TOUCH
@@ -35,6 +47,7 @@ activityThread = None
 activityThreadStop = False
 rounds -= 1
 roundCount = 0
+dropSlots = [ int(x) for x in dropSlots ]
 
 def logger(message):
     print(prefix + message)
