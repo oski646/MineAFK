@@ -19,5 +19,10 @@ python main.py
 3. W pliku `config` masz całą potrzebną konfigurację
 4. Odpalamy skrypt klikając dwa razy w plik `.exe`
 
+## Lista keybindów
+- **F8** - Wystartowanie kopania
+- **F9** - Zatrzymanie kopania
+- **F10** - Wyjście ze skryptu
+
 ## Problemy, pytania, nowości
 Wszystkie takie sprawy proszę zgłaszać w tej [sekcji](https://github.com/oski646/MineAFK/issues)
