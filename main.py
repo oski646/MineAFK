@@ -183,12 +183,14 @@ def eat():
     global pickaxe
     time.sleep(0.1)
     keyboard.press(str(food))
+    keyboard.release(str(food))
     time.sleep(0.1)
     mouse.press(Button.right)
     time.sleep(3)
     mouse.release(Button.right)
     time.sleep(0.1)
     keyboard.press(str(pickaxe))
+    keyboard.release(str(pickaxe))
 
 # Function for sending command to server
 def sendCommand(command):
