@@ -164,7 +164,7 @@ def drop():
     fourthRow = (819, 698)
     mouse.position = fourthRow
     fourthStart = 1
-    for i in range(28, 36):
+    for i in range(28, 37):
         if i in dropSlots:
             dropSlot(819 + (fourthStart * 36), 698)
         time.sleep(0.1)
