@@ -1,13 +1,10 @@
 # MineAFK
 Skrypt stworzony dla społeczności ludzi kopiących AFK na serwerach minecraft
 
-## Wymagania
+## Pobierz to jeśli nie działa ci plik `.exe`
 - Python 
   - (wersja 64 bit) - [POBIERZ](https://www.python.org/ftp/python/3.8.1/python-3.8.1-amd64.exe)
   - (wersja 32 bit) - [POBIERZ](https://www.python.org/ftp/python/3.8.1/python-3.8.1.exe)
-- Minecraft
-  - rozdzielczość: 1280x720
-  - umiejscowiony na środku ekranu (tak jak domyślnie otwiera się minecraft bez zmieniania pozycji)
 
 ## Instalacja manualna
 1. Pobierz sobie repozytorium - [link](https://github.com/oski646/MineAFK.git)
@@ -16,33 +13,54 @@ Skrypt stworzony dla społeczności ludzi kopiących AFK na serwerach minecraft
 ```
 pip install -r requirements.txt
 ```
-4. Wszystko gotowe! Teraz wystarczy odpalić sobie skrypt komendą
-```
-python main.py
-```
+4. Włączenie:
+- skryptu: ```python main.py```
+- slot readera: ```python mouse-position.py```
 
 ## Instalacja automatyczna
 1. Pobierz paczkę - [link](https://drive.google.com/drive/folders/19JwqDHnmwm5ND0hm19M4UIqAGOinjUC-?usp=sharing)
 2. Wypakuj paczkę
 3. W pliku `config` masz całą potrzebną konfigurację
-4. Odpalamy skrypt klikając dwa razy w plik `.exe`
+4. Włączenie:
+- skryptu: kliknij dwa razy na ```Skrypt.exe```
+- slot readera: kliknij dwa razy na ```Slot reader.exe```
 
 ## Objaśnienie configu
 ```
 [Config]
-stones = 13 <-- Ilość stoniarek (liczone w szerokości)
-pickaxe = 8 <-- Slot kilofa (liczba podana jako numer który klikasz na klawiaturze) - potrzebne tylko jeśli jedzenie jest włączone
-food = 0 <-- Slot jedzenia (liczba podana jako numer który klikasz na klawiaturze) - ustaw 0 jeśli nie chcesz jeść jedzenia
-dropSlots = 6,7 <-- Sloty, które mają zostać wyrzucone
-rounds = 2 <-- Co ile tur ma wyrzucić itemy i wykonać komendy (jedna tura to przejście w lewo i prawo - powrót do miejsca startu)
-commands = cx,cx,naprawkilof <-- Komendy, które mają zostać wykonane
+stones = 13 <-- ile jest stoniarek w szerokości
+pickaxe = 8 <-- slot kilofa
+eatRounds = 3 <-- co ile rund ma jeść
+food = 0 <-- slot mięska (ustaw 0 jeśli nie chcesz jeść)
+dropRounds = 4 <-- co ile rund ma wyrzucać itemy
+dropSlots = 6,7 <-- sloty do wyrzucenia
+activityRounds = 1 <-- co ile rund ma się wykonać "aktywność"
+activityCommands = naprawkilof <-- komendy do wykonania "aktywności"
+cobblexRounds = 2 <-- co ile rund ma się tworzyć cobblex
+cobblexCommands = cx,cx <-- komendy do wytworzenia cobblex
+
+# (!) TA CAŁA SEKCJA WAS NIE INTERESUJE (!) #
+# Jeśli chcecie coś tutaj zmieniać macie od tego "Slot reader" #
+[Slots]
+firstRowX = 819
+firstRowY = 580
+secondRowX = 819
+secondRowY = 617
+thirdRowX = 819
+thirdRowY = 653
+fourthRowX = 819
+fourthRowY = 698
+dropX = 1346
+dropY = 565
+# Optymalna wartość tej zmiennej to 36, jeśli screen reader ci źle czyta sloty spróbuj zmienić tylko tą zmienną po otrzymaniu configu #
+difference = 36 
 ```
 
 ## Ułożenie slotów w ekwipunku
-        [1]  [2]  [3]  [4]  [5]  [6]  [7]  [8]  [9]
-        [10] [11] [12] [13] [14] [15] [16] [17] [18]
-        [19] [20] [21] [22] [23] [24] [25] [26] [27]
-        [28] [29] [30] [31] [32] [33] [34] [35] [36]
+        Pierwszy rząd     (EQ)         [1]  [2]  [3]  [4]  [5]  [6]  [7]  [8]  [9]
+        Drugi rząd        (EQ)         [10] [11] [12] [13] [14] [15] [16] [17] [18]
+        Trzeci rząd       (EQ)         [19] [20] [21] [22] [23] [24] [25] [26] [27]
+        Czwarty rząd      (PODSTWA)    [28] [29] [30] [31] [32] [33] [34] [35] [36]
         
  *Zawsze na slocie, który ma być wyrzucony zostanie wyrzucone **stack - 1** czyli jeśli mamy na slocie 64 złota to wyrzucimy tylko 63 aby zostawić 1 na tym slocie*
 
