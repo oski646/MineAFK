@@ -13,8 +13,12 @@ stones = int(config["Config"]["stones"])
 pickaxe = int(config["Config"]["pickaxe"])
 food = int(config["Config"]["food"])
 dropSlots = config["Config"]["dropSlots"].split(",")
-rounds = int(config["Config"]["rounds"])
-commands = config["Config"]["commands"].split(",")
+activityRoundsConfig = int(config["Config"]["activityRounds"])
+activityCommands = config["Config"]["activityCommands"].split(",")
+cobblexRoundsConfig = int(config["Config"]["cobblexRounds"])
+cobblexCommands = config["Config"]["cobblexCommands"].split(",")
+dropRoundsConfig = int(config["Config"]["dropRounds"])
+eatRoundsConfig = int(config["Config"]["eatRounds"])
 
 # Welcome message
 print("")
@@ -30,10 +34,10 @@ print("")
 print("## Konfiguracja ##")
 print("Ilość stoniarek - " + str(stones))
 print("Slot kilofa - " + str(pickaxe))
-print("Slot mięska - " + str(food))
-print("Sloty do wyrzucenia - " + str(dropSlots))
-print("Ilość tur do powtórzenia aktywności - " + str(rounds))
-print("Komendy do wykonania - " + str(commands))
+print("Slot mięska - " + str(food) + " (jedzone co " + str(eatRoundsConfig) + " rund)")
+print("Sloty do wyrzucenia - " + str(dropSlots) + " (wyrzucane co " + str(dropRoundsConfig) + " rund)")
+print("Komendy aktywności - " + str(activityCommands) + " (wykonywane co " + str(activityRoundsConfig) + " rund)")
+print("Cobblex - " + str(cobblexCommands) + " (tworzone co " + str(cobblexRoundsConfig) + " rund)")
 
 print("")
 print("")
@@ -45,9 +49,12 @@ miningThread = None
 miningThreadStop = False
 activityThread = None
 activityThreadStop = False
-rounds -= 1
-roundCount = 0
 dropSlots = [ int(x) for x in dropSlots ]
+# Round counters
+activityRounds = 0
+cobblexRounds = 0
+dropRounds = 0
+eatRounds = 0
 
 def logger(message):
     print(prefix + message)
@@ -59,23 +66,6 @@ mouse = MouseController()
 # Keyboard controller
 keyboard = KeyboardController()
 
-# Check if minecraft is already launched
-try:
-    minecraft = gw.getWindowsWithTitle("Minecraft\u200b 1.8.8 (Blazing\u200bPack.pl)")[0]
-except IndexError:
-    logger("Wymagana wersja: Minecraft 1.8.8 (BlazingPack.pl)")
-    logger("Niestety nie masz włączonego minecrafta - nie wspieramy innych wersji!")
-    time.sleep(5)
-    exit()
-
-# Check minecraft resolution
-width = minecraft.width
-height = minecraft.height
-if(width != 1296 and height != 759):
-    logger("Minecraft jest zminimalizowany lub okno nie jest w rozmiarach 1280x720")
-    time.sleep(5)
-    exit()
-
 # Release all necessary keys
 def releaseAll():
     mouse.release(Button.left)
@@ -85,7 +75,7 @@ def releaseAll():
 # Function for player moving
 def startMoving():
     global miningThreadStop
-    global roundCount
+    global activityRounds, cobblexRounds, dropRounds, eatRounds
     while True:
         if miningThreadStop == True:
             break
@@ -99,12 +89,15 @@ def startMoving():
         keyboard.press("a")
         time.sleep(delay)
         keyboard.release("a")
-        roundCount += 1
+        activityRounds += 1
+        cobblexRounds += 1
+        dropRounds += 1
+        eatRounds += 1
         startMoving()
 
 def dropSlot(backX, backY):
     time.sleep(0.05)
-    dropPosition = (1346, 565)
+    dropPosition = (int(config["Slots"]["dropX"]), int(config["Slots"]["dropY"]))
     time.sleep(0.05)
     mouse.click(Button.left)
     time.sleep(0.05)
@@ -128,47 +121,47 @@ def drop():
     time.sleep(0.25)
 
     # First row
-    firstRow = (819, 580)
+    firstRow = (int(config["Slots"]["firstRowX"]), int(config["Slots"]["firstRowY"]))
     mouse.position = firstRow
     firstStart = 1
     for i in range(1, 10):
         if i in dropSlots:
-            dropSlot(819 + (firstStart * 36), 580)
+            dropSlot(int(config["Slots"]["firstRowX"]) + (firstStart * int(config["Slots"]["difference"])), int(config["Slots"]["firstRowY"]))
         time.sleep(0.1)
-        mouse.position = (819 + (firstStart * 36), 580)
+        mouse.position = (int(config["Slots"]["firstRowX"]) + (firstStart * int(config["Slots"]["difference"])), int(config["Slots"]["firstRowY"]))
         firstStart += 1
 
     # Second row
-    secondRow = (819, 617)
+    secondRow = (int(config["Slots"]["secondRowX"]), int(config["Slots"]["secondRowY"]))
     mouse.position = secondRow
     secondStart = 1
     for i in range(10, 19):
         if i in dropSlots:
-            dropSlot(819 + (secondStart * 36), 617)
+            dropSlot(int(config["Slots"]["secondRowX"]) + (secondStart * int(config["Slots"]["difference"])), int(config["Slots"]["secondRowY"]))
         time.sleep(0.1)
-        mouse.position = (819 + (secondStart * 36), 617)
+        mouse.position = (int(config["Slots"]["secondRowX"]) + (secondStart * int(config["Slots"]["difference"])), int(config["Slots"]["secondRowY"]))
         secondStart += 1
 
     # Third row
-    thirdRow = (819, 653)
+    thirdRow = (int(config["Slots"]["thirdRowX"]), int(config["Slots"]["thirdRowY"]))
     mouse.position = thirdRow
     thirdStart = 1
     for i in range(19, 28):
         if i in dropSlots:
-            dropSlot(819 + (thirdStart * 36), 653)
+            dropSlot(int(config["Slots"]["thirdRowX"]) + (thirdStart * int(config["Slots"]["difference"])), int(config["Slots"]["thirdRowY"]))
         time.sleep(0.1)
-        mouse.position = (819 + (thirdStart * 36), 653)
+        mouse.position = (int(config["Slots"]["thirdRowX"]) + (thirdStart * int(config["Slots"]["difference"])), int(config["Slots"]["thirdRowY"]))
         thirdStart += 1
 
     # Fourth row
-    fourthRow = (819, 698)
+    fourthRow = (int(config["Slots"]["fourthRowX"]), int(config["Slots"]["fourthRowY"]))
     mouse.position = fourthRow
     fourthStart = 1
     for i in range(28, 37):
         if i in dropSlots:
-            dropSlot(819 + (fourthStart * 36), 698)
+            dropSlot(int(config["Slots"]["fourthRowX"]) + (fourthStart * int(config["Slots"]["difference"])), int(config["Slots"]["fourthRowY"]))
         time.sleep(0.1)
-        mouse.position = (819 + (fourthStart * 36), 698)
+        mouse.position = (int(config["Slots"]["fourthRowX"]) + (fourthStart * int(config["Slots"]["difference"])), int(config["Slots"]["fourthRowY"]))
         fourthStart += 1
 
     time.sleep(0.25)
@@ -208,41 +201,55 @@ def sendCommand(command):
 def activity():
     global miningThread
     global miningThreadStop
-    global interval
     global food
-    global roundCount
     global activityThreadStop
-    global rounds
+    global activityRounds, cobblexRounds, dropRounds, eatRounds
+    global activityRoundsConfig, cobblexRoundsConfig, dropRoundsConfig, eatRoundsConfig
+    global activityCommands, cobblexCommands
 
     while True:
         if activityThreadStop == True:
             break
-        if roundCount == rounds:
+        if activityRounds == (activityRoundsConfig - 1) or cobblexRounds == (cobblexRoundsConfig - 1) or dropRounds == (dropRoundsConfig - 1) or eatRounds == (eatRoundsConfig - 1):
             if miningThread != None:
                 miningThreadStop = True
                 miningThread.join()
                 miningThread = None
 
-                # Send commands
-                for command in commands:
-                    sendCommand(command)
-
-                # Drop
-                drop()
-
-                # Eat
+                # Activity
+                if activityRounds == activityRoundsConfig:
+                    print("aktywnosc")
+                    for command in activityCommands:
+                        sendCommand(command)
+                    
+                    activityRounds = 0
+                # Cobblex commands
+                if cobblexRounds == cobblexRoundsConfig:
+                    print("cx")
+                    for command in cobblexCommands:
+                        sendCommand(command)
+                    
+                    cobblexRounds = 0
+                # Drop slots
+                if dropRounds == dropRoundsConfig:
+                    print("drop")
+                    drop()
+                    dropRounds = 0
+                # Eating
                 if food >= 1 and food <= 9:
-                    eat()
+                    if eatRounds == eatRoundsConfig:
+                        print("eat")
+                        eat()
+                        eatRounds = 0
 
                 # Left click
                 mouse.release(Button.left)
-                time.sleep(2)
+                time.sleep(0.1)
 
                 # Start moving thread
                 miningThreadStop = False
                 miningThread = threading.Thread(target = startMoving)
                 miningThread.start()
-                roundCount = 0
 
 # Function to listen pressed keys
 def on_press(key):
