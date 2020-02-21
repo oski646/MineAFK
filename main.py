@@ -5,10 +5,12 @@ import pygetwindow as gw
 import time
 import threading
 import configparser
+import requests
 config = configparser.ConfigParser()
 config.read("config.ini")
 
 # Global variables
+version = config["Version"]["version"]
 stones = int(config["Config"]["stones"])
 pickaxe = int(config["Config"]["pickaxe"])
 food = int(config["Config"]["food"])
@@ -60,6 +62,9 @@ def logger(message):
     print(prefix + message)
 
 logger("Włączanie skryptu...")
+
+logger("Sprawdzanie aktualizacji...")
+#TO DO
 
 # Mouse controller
 mouse = MouseController()
@@ -218,27 +223,23 @@ def activity():
 
                 # Activity
                 if activityRounds == activityRoundsConfig:
-                    print("aktywnosc")
                     for command in activityCommands:
                         sendCommand(command)
                     
                     activityRounds = 0
                 # Cobblex commands
                 if cobblexRounds == cobblexRoundsConfig:
-                    print("cx")
                     for command in cobblexCommands:
                         sendCommand(command)
                     
                     cobblexRounds = 0
                 # Drop slots
                 if dropRounds == dropRoundsConfig:
-                    print("drop")
                     drop()
                     dropRounds = 0
                 # Eating
                 if food >= 1 and food <= 9:
                     if eatRounds == eatRoundsConfig:
-                        print("eat")
                         eat()
                         eatRounds = 0
 
