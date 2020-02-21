@@ -27,6 +27,10 @@ pip install -r requirements.txt
 
 ## Objaśnienie configu
 ```
+# (!) PROSZĘ TEGO NIE RUSZAĆ (!) #
+[Version]
+version = 0.4 BETA
+
 [Config]
 stones = 13 <-- ile jest stoniarek w szerokości
 pickaxe = 8 <-- slot kilofa
