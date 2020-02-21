@@ -6,6 +6,7 @@ import time
 import threading
 import configparser
 import requests
+import json
 config = configparser.ConfigParser()
 config.read("config.ini")
 
@@ -64,7 +65,20 @@ def logger(message):
 logger("Włączanie skryptu...")
 
 logger("Sprawdzanie aktualizacji...")
-#TO DO
+response = requests.get("https://raw.githubusercontent.com/oski646/MineAFK/master/version.txt")
+responseVersion = response.text
+if responseVersion != version:
+    logger("Twoja wersja jest nieaktualna, pobierz aktualną z: https://github.com/oski646/MineAFK")
+    changesResponse = requests.get("https://api.github.com/repos/oski646/MineAFK/commits/master")
+    changesResponse = requests.get("https://api.github.com/repos/oski646/MineAFK/commits/master")
+    changesJson = json.loads(changesResponse.text)
+    changes = changesJson["commit"]["message"]
+    print("")
+    print("Changelog")
+    print(changes)
+    print("")
+else:
+    logger("Posiadasz aktualną wersję skryptu.")
 
 # Mouse controller
 mouse = MouseController()
