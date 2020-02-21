@@ -7,7 +7,7 @@ Skrypt stworzony dla społeczności ludzi kopiących AFK na serwerach minecraft
   - (wersja 32 bit) - [POBIERZ](https://www.python.org/ftp/python/3.8.1/python-3.8.1.exe)
 
 ## Instalacja manualna
-1. Pobierz sobie repozytorium - [link](https://github.com/oski646/MineAFK.git)
+1. Pobierz sobie repozytorium - [link](https://github.com/oski646/MineAFK/archive/master.zip)
 2. Przejdź do folderu z repozytorium
 3. Pobierz wszystkie potrzebne moduły
 ```
