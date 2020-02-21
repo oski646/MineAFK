@@ -18,7 +18,7 @@ pip install -r requirements.txt
 - slot readera: ```python mouse-position.py```
 
 ## Instalacja automatyczna
-1. Pobierz paczkę - [link](https://drive.google.com/drive/folders/19JwqDHnmwm5ND0hm19M4UIqAGOinjUC-?usp=sharing)
+1. Pobierz najnowszą wersję paczki - [link](https://github.com/oski646/MineAFK/releases)
 2. Wypakuj paczkę
 3. W pliku `config` masz całą potrzebną konfigurację
 4. Włączenie:
