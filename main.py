@@ -22,6 +22,7 @@ cobblexRoundsConfig = int(config["Config"]["cobblexRounds"])
 cobblexCommands = config["Config"]["cobblexCommands"].split(",")
 dropRoundsConfig = int(config["Config"]["dropRounds"])
 eatRoundsConfig = int(config["Config"]["eatRounds"])
+commandsDelayInSeconds = float(config["Config"]["commandsDelayInSeconds"])
 
 # Welcome message
 print("")
@@ -41,6 +42,7 @@ print("Slot mięska - " + str(food) + " (jedzone co " + str(eatRoundsConfig) + "
 print("Sloty do wyrzucenia - " + str(dropSlots) + " (wyrzucane co " + str(dropRoundsConfig) + " rund)")
 print("Komendy aktywności - " + str(activityCommands) + " (wykonywane co " + str(activityRoundsConfig) + " rund)")
 print("Cobblex - " + str(cobblexCommands) + " (tworzone co " + str(cobblexRoundsConfig) + " rund)")
+print("Odstęp pomiędzy wysyłaniem komend - " + str(commandsDelayInSeconds) + " sek.")
 
 print("")
 print("")
@@ -215,6 +217,7 @@ def sendCommand(command):
     keyboard.type(command)
     keyboard.press(Key.enter)
     keyboard.release(Key.enter)
+    time.sleep(commandsDelayInSeconds)
 
 # Activity
 def activity():
