@@ -29,7 +29,7 @@ pip install -r requirements.txt
 ```
 # (!) PROSZĘ TEGO NIE RUSZAĆ (!) #
 [Version]
-version = 0.4 BETA
+version = 0.4.1 BETA
 
 [Config]
 stones = 13 <-- ile jest stoniarek w szerokości
@@ -42,6 +42,7 @@ activityRounds = 1 <-- co ile rund ma się wykonać "aktywność"
 activityCommands = naprawkilof <-- komendy do wykonania "aktywności"
 cobblexRounds = 2 <-- co ile rund ma się tworzyć cobblex
 cobblexCommands = cx,cx <-- komendy do wytworzenia cobblex
+commandsDelayInSeconds = 0.5 <-- odstęp w sekundach między wykonywaniem dwóch komend
 
 # (!) TA CAŁA SEKCJA WAS NIE INTERESUJE (!) #
 # Jeśli chcecie coś tutaj zmieniać macie od tego "Slot reader" #
