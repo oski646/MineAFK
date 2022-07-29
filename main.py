@@ -1,7 +1,6 @@
 from pynput.keyboard import Key, Controller as KeyboardController
 from pynput.mouse import Button, Controller as MouseController
 from pynput import keyboard as KeyboardManager
-import pygetwindow as gw
 import time
 import threading
 import configparser
