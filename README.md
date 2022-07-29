@@ -85,5 +85,9 @@ W celu poprawnego skonfigurowania slotów odpalamy `Slot reader.exe`. Skrypt odp
 - **F9** - Zatrzymanie kopania
 - **F10** - Wyjście ze skryptu
 
+## FAQ
+### Program został wykryty jako wirus. Co zrobić w takiej sytuacji?
+Program, który dostarczany jest jako plik `.exe` jest tworzony przy użyciu `pyinstaller`. Dzięki temu jestem w stanie dostarczyć pojedynczy plik, który odpala skrypt. Natomiast czasami zdarza się, że ten plik jest traktowany jako wirus (na co niestety nie mam wpływu) i zostaje on natychmiastowo usunięty z komputera. W takiej sytuacji polecam dodać program do wyjątków antywirusa lub manualne uruchomić program. Więcej można przeczytać [tutaj](https://medium.com/@markhank/how-to-stop-your-python-programs-being-seen-as-malware-bfd7eb407a7).
+
 ## Problemy, pytania, nowości
 Wszystkie takie sprawy proszę zgłaszać w tej [sekcji](https://github.com/oski646/MineAFK/issues)
