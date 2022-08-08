@@ -16,6 +16,7 @@ cobblexCommands = file["Config"]["cobblexCommands"].split(",")
 dropRoundsConfig = int(file["Config"]["dropRounds"])
 eatRoundsConfig = int(file["Config"]["eatRounds"])
 commandsDelayInSeconds = float(file["Config"]["commandsDelayInSeconds"])
+fastPickaxe = file["Config"]["fastPickaxe"].lower() == "true"
 slots = {
     'firstRowX': int(file["Slots"]["firstRowX"]),
     'firstRowY': int(file["Slots"]["firstRowY"]),

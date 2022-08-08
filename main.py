@@ -43,13 +43,16 @@ def startMoving():
             break
 
         mouse.press(Button.left)
-        delay = (config.stones / 4) - 0.2
-        keyboard.press("d")
-        time.sleep(delay)
-        keyboard.release("d")
-        keyboard.press("a")
-        time.sleep(delay)
-        keyboard.release("a")
+        if config.fastPickaxe:
+            delay = (config.stones / 4) - 0.2
+            keyboard.press("d")
+            time.sleep(delay)
+            keyboard.release("d")
+            keyboard.press("a")
+            time.sleep(delay)
+            keyboard.release("a")
+        else:
+            time.sleep(5)
         activityRounds += 1
         cobblexRounds += 1
         dropRounds += 1
