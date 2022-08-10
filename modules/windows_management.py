@@ -1,10 +1,6 @@
 import win32gui, win32con, win32api
 import time
-import modules.admin as admin
 import modules.config as config
-
-if not admin.isUserAdmin():
-    admin.runAsAdmin()
 
 hwnd = win32gui.FindWindow(None, config.backgroundMining["windowName"])
 
