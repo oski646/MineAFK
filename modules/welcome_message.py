@@ -12,7 +12,8 @@ def send():
     print("")
 
     print("## Konfiguracja ##")
-    print("Ilość stoniarek - " + str(config.stones))
+    print("Ilość stoniarek w bok - " + str(config.horizontalStones))
+    print("Ilość stoniarek w przód - " + str(config.verticalStones))
     print("Slot kilofa - " + str(config.pickaxe))
     print("Slot mięska - " + str(config.food) + " (jedzone co " + str(config.eatRoundsConfig) + " rund)")
     print("Sloty do wyrzucenia - " + str(config.dropSlots) + " (wyrzucane co " + str(config.dropRoundsConfig) + " rund)")
