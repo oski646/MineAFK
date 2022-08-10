@@ -2,20 +2,19 @@
 Skrypt stworzony dla społeczności ludzi kopiących AFK na serwerach minecraft
 
 ## Pobierz to jeśli nie działa ci plik `.exe`
-- Python 
-  - (wersja 64 bit) - [POBIERZ](https://www.python.org/ftp/python/3.8.1/python-3.8.1-amd64.exe)
-  - (wersja 32 bit) - [POBIERZ](https://www.python.org/ftp/python/3.8.1/python-3.8.1.exe)
+- Python - [link](https://www.python.org/downloads/)
 
 ## Instalacja manualna
 1. Pobierz sobie repozytorium - [link](https://github.com/oski646/MineAFK/archive/master.zip)
 2. Przejdź do folderu z repozytorium
-3. Pobierz wszystkie potrzebne moduły
+3. Zainstaluj poetry - [link](https://python-poetry.org/docs/#installation)
+4. Zainstaluj wszystkie zależności
 ```
-pip install -r requirements.txt
+poetry install
 ```
 4. Włączenie:
-- skryptu: ```python main.py```
-- slot readera: ```python mouse-position.py```
+- skryptu: ```poetry run python main.py```
+- slot readera: ```poetry run python mouse-position.py```
 
 ## Instalacja automatyczna
 1. Pobierz najnowszą wersję paczki - [link](https://github.com/oski646/MineAFK/releases)
@@ -85,6 +84,10 @@ W celu poprawnego skonfigurowania slotów odpalamy `Slot reader.exe`. Skrypt odp
 - **F8** - Wystartowanie kopania
 - **F9** - Zatrzymanie kopania
 - **F10** - Wyjście ze skryptu
+
+## FAQ
+### Program został wykryty jako wirus. Co zrobić w takiej sytuacji?
+Program, który dostarczany jest jako plik `.exe` jest tworzony przy użyciu `pyinstaller`. Dzięki temu jestem w stanie dostarczyć pojedynczy plik, który odpala skrypt. Natomiast czasami zdarza się, że ten plik jest traktowany jako wirus (na co niestety nie mam wpływu) i zostaje on natychmiastowo usunięty z komputera. W takiej sytuacji polecam dodać program do wyjątków antywirusa lub manualne uruchomić program. Więcej można przeczytać [tutaj](https://medium.com/@markhank/how-to-stop-your-python-programs-being-seen-as-malware-bfd7eb407a7).
 
 ## Problemy, pytania, nowości
 Wszystkie takie sprawy proszę zgłaszać w tej [sekcji](https://github.com/oski646/MineAFK/issues)

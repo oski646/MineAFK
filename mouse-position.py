@@ -18,7 +18,7 @@ print("##################  MineAFK - Slot Reader  ##################")
 print("")
 
 def test():
-    global firstRow, secondRow, thirdRow, fourthRow, difference
+    global firstRow, difference
     mouse.position = firstRow
     firstStart = 1
     for i in range(1, 10):
@@ -27,43 +27,37 @@ def test():
         firstStart += 1
 
     # Second row
-    mouse.position = secondRow
+    mouse.position = (firstRow[0], firstRow[1] + difference)
     secondStart = 1
     for i in range(10, 19):
         time.sleep(0.3)
-        mouse.position = (secondRow[0] + (secondStart * difference), secondRow[1])
+        mouse.position = (firstRow[0] + (secondStart * difference), firstRow[1] + difference)
         secondStart += 1
 
     # Third row
-    mouse.position = thirdRow
+    mouse.position = (firstRow[0], firstRow[1] + 2 * difference)
     thirdStart = 1
     for i in range(19, 28):
         time.sleep(0.3)
-        mouse.position = (thirdRow[0] + (thirdStart * difference), thirdRow[1])
+        mouse.position = (firstRow[0] + (thirdStart * difference), firstRow[1] + 2 * difference)
         thirdStart += 1
 
     # Fourth row
-    mouse.position = fourthRow
+    mouse.position = (firstRow[0], firstRow[1] + 3 * difference)
     fourthStart = 1
     for i in range(28, 37):
         time.sleep(0.3)
-        mouse.position = (fourthRow[0] + (fourthStart * difference), fourthRow[1])
+        mouse.position = (firstRow[0] + (fourthStart * difference), firstRow[1] + 3 * difference)
         fourthStart += 1
 
 prefix = "MineAFK - "
 firstRow = (0, 0)
-secondRow = (0, 0)
-thirdRow = (0, 0)
-fourthRow = (0, 0)
 drop = (0, 0)
 difference = 0
 
 # Steps
 firstStep = True
 secondStep = False
-thirdStep = False
-fourthStep = False
-fifthStep = False
 finish = False
 
 def logger(message):
@@ -78,7 +72,7 @@ def on_press(key):
 # Function to listen released keys
 def on_release(key):
     global firstRow, secondRow, thirdRow, fourthRow, difference
-    global firstStep, secondStep, thirdStep, fourthStep, fifthStep, finish
+    global firstStep, secondStep, finish
 
     if key == KeyboardManager.Key.f8:
         if firstStep == True:
@@ -91,26 +85,8 @@ def on_release(key):
             before = firstRow[0]
             after = mouse.position[0]
             difference = after - before
-            logger("Zeskanuj proszę drugi rząd twojego ekwipunku. \nKliknij F8 jeśli twój kursor będzie na odpowiednim slocie!\n")
-            secondStep = False
-            thirdStep = True
-            return
-        if thirdStep == True:
-            secondRow = mouse.position
-            logger("Zeskanuj proszę trzeci rząd twojego ekwipunku. \nKliknij F8 jeśli twój kursor będzie na odpowiednim slocie!\n")
-            thirdStep = False
-            fourthStep = True
-            return
-        if fourthStep == True:
-            thirdRow = mouse.position
-            logger("Zeskanuj proszę czwarty rząd twojego ekwipunku. \nKliknij F8 jeśli twój kursor będzie na odpowiednim slocie!\n")
-            fourthStep = False
-            fifthStep = True
-            return
-        if fifthStep == True:
-            fourthRow = mouse.position
             logger("Zeskanuj miejsce poza ekwipunkiem aby można było wyrzucać przedmioty. \nKliknij F8 jeśli twój kursor będzie w odpowiednim miejscu!\n")
-            fifthStep = False
+            secondStep = False
             finish = True
             return
         if finish == True:
@@ -128,12 +104,6 @@ def on_release(key):
             print("[Slots]")
             print("firstRowX = " + str(firstRow[0]))
             print("firstRowY = " + str(firstRow[1]))
-            print("secondRowX = " + str(secondRow[0]))
-            print("secondRowY = " + str(secondRow[1]))
-            print("thirdRowX = " + str(thirdRow[0]))
-            print("thirdRowY = " + str(thirdRow[1]))
-            print("fourthRowX = " + str(fourthRow[0]))
-            print("fourthRowY = " + str(fourthRow[1]))
             print("dropX = " + str(drop[0]))
             print("dropY = " + str(drop[1]))
             print("difference = " + str(difference))
