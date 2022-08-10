@@ -1,2 +1,2 @@
-poetry run pyinstaller --clean --onefile --icon=app/pickaxe.ico main.py
-poetry run pyinstaller --clean --onefile --icon=app/pickaxe.ico mouse-position.py
+poetry run pyinstaller --clean --onefile --icon=pickaxe.ico main.py
+poetry run pyinstaller --clean --onefile --icon=pickaxe.ico mouse-position.py

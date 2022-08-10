@@ -1,8 +1,10 @@
 import win32gui, win32con, win32api
 import time
 import modules.config as config
+from pynput.mouse import Controller
 
 hwnd = win32gui.FindWindow(None, config.backgroundMining["windowName"])
+mouse = Controller()
 
 isMouseLeftButtonPressed = False
 isMouseRightButtonPressed = False
@@ -258,3 +260,15 @@ def send_blazingpack_messages():
     win32api.PostMessage(hwnd, win32con.WM_ACTIVATE, 0, 0)
     win32api.PostMessage(hwnd, win32con.WM_IME_NOTIFY, win32con.IMN_OPENSTATUSWINDOW, 0)
     win32api.PostMessage(hwnd, win32con.WM_SETFOCUS, 0, 0)
+
+def set_focus():
+    win32api.PostMessage(hwnd, win32con.WM_SETFOCUS, 0, 0)
+
+def update_mouse_position():
+    global mouse_position
+    mouse_position = mouse.position
+
+def restore_mouse_position():
+    global mouse_position
+    mouse.position = mouse_position
+

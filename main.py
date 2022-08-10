@@ -125,7 +125,7 @@ def drop():
     time.sleep(0.25)
 
     for slot in dropSlots:
-        drop_slot(calculate_inventory_mouse_position(slot))
+        drop_slot(calculate_inventory_mouse_position(slot)[0], calculate_inventory_mouse_position(slot)[1])
 
     # Close inventory
     time.sleep(0.25)
@@ -147,12 +147,16 @@ def eat():
 
 def sendCommand(command):
     windows_management.mouse_left_click_release()
+    if config.backgroundMining["isBlazingPack"]:
+        windows_management.update_mouse_position()
     windows_management.press_key("t")
     windows_management.release_key("t")
-    time.sleep(0.5)
+    time.sleep(0.05)
     windows_management.type_string("/" + command)
-    time.sleep(0.5)
+    time.sleep(0.05)
     windows_management.click_enter()
+    if config.backgroundMining["isBlazingPack"]:
+        windows_management.restore_mouse_position()
     time.sleep(config.commandsDelayInSeconds)
 
 # Activity
@@ -212,6 +216,8 @@ def start_mining():
             time.sleep(1)
             logger.info("Minimizing blazingpack window")
             windows_management.minimize()
+        else:
+            windows_management.set_focus()
         time.sleep(2)
 
         # Start moving thread
@@ -258,7 +264,7 @@ def stop_mining():
 # GUI initialization
 root = Tk()
 root.title("MineAFK (" + config.version + ")")
-root.iconbitmap('./app/pickaxe.ico')
+root.iconbitmap('pickaxe.ico')
 root.geometry("320x180")
 
 start_mining_button = tkinter.Button(root, text="Start", width=8, pady=8, command=start_mining)
