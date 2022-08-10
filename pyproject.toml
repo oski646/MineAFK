@@ -1,0 +1,19 @@
+[tool.poetry]
+name = "mineafk"
+version = "0.4.1 BETA"
+description = "Script which allows people to automatically dig stone and collect resources."
+authors = ["oski646 <me.oski646@gmail.com>"]
+license = "MIT"
+
+[tool.poetry.dependencies]
+python = ">=3.10,<3.11"
+pynput = "^1.7.6"
+requests = "^2.28.1"
+pyinstaller = "^5.2"
+pywin32 = "^304"
+
+[tool.poetry.dev-dependencies]
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
