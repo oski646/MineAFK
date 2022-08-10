@@ -258,6 +258,7 @@ def stop_mining():
 # GUI initialization
 root = Tk()
 root.title("MineAFK (" + config.version + ")")
+root.iconbitmap('./app/pickaxe.ico')
 root.geometry("320x180")
 
 start_mining_button = tkinter.Button(root, text="Start", width=8, pady=8, command=start_mining)

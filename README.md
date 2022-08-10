@@ -28,10 +28,11 @@ poetry install
 ```
 # (!) PROSZĘ TEGO NIE RUSZAĆ (!) #
 [Version]
-version = 0.4.1 BETA
+version = 0.5 BETA
 
 [Config]
-stones = 13 <-- ile jest stoniarek w szerokości
+horizontalStones = 7 <-- ile jest stoniarek w szerokości
+verticalStones = 2 <-- ile jest stoniarek przód/tył
 pickaxe = 8 <-- slot kilofa
 eatRounds = 3 <-- co ile rund ma jeść
 food = 0 <-- slot mięska (ustaw 0 jeśli nie chcesz jeść)
@@ -42,20 +43,20 @@ activityCommands = naprawkilof <-- komendy do wykonania "aktywności"
 cobblexRounds = 2 <-- co ile rund ma się tworzyć cobblex
 cobblexCommands = cx,cx <-- komendy do wytworzenia cobblex
 commandsDelayInSeconds = 0.5 <-- odstęp w sekundach między wykonywaniem dwóch komend
+fastPickaxe = true <-- czy kopanie jest na kilofie 6/3/3
+
+[BackgroundMining]
+windowName = Minecraft 1.19.2 - Multiplayer (3rd-party Server) <-- dokładna nazwa okna minecrafta
+isBlazingPack = false <-- czy wybrane okno minecraft to blazingpack
 
 # (!) TA CAŁA SEKCJA WAS NIE INTERESUJE (!) #
 # Jeśli chcecie coś tutaj zmieniać macie od tego "Slot reader" #
 [Slots]
-firstRowX = 819
-firstRowY = 580
-secondRowX = 819
-secondRowY = 617
-thirdRowX = 819
-thirdRowY = 653
-fourthRowX = 819
-fourthRowY = 698
-dropX = 1346
-dropY = 565
+[Slots]
+firstRowX = 815
+firstRowY = 545
+dropX = 371
+dropY = 291
 # Optymalna wartość tej zmiennej to 36, jeśli screen reader ci źle czyta sloty spróbuj zmienić tylko tą zmienną po otrzymaniu configu #
 difference = 36 
 ```
@@ -71,19 +72,11 @@ difference = 36
 ## Slot reader
 W celu poprawnego skonfigurowania slotów odpalamy `Slot reader.exe`. Skrypt odpala nam się i prosi o zeskanowanie sześciu pozycji. **(skanujemy sam środek slota)**
 
-![Zdjęcie](https://i.imgur.com/wGwoENB.png)
+![Zdjęcie](https://i.imgur.com/nyRreuU.png)
 
 1. Pierwszy krok
 2. Drugi krok
-3. Trzeci krok
-4. Czwarty krok
-5. Piąty krok
-6. Nie ma na zdjęciu ale chodzi o zeskanowanie miejsca poza ekwipunkiem.
-
-## Lista keybindów
-- **F8** - Wystartowanie kopania
-- **F9** - Zatrzymanie kopania
-- **F10** - Wyjście ze skryptu
+3. Nie ma na zdjęciu ale chodzi o zeskanowanie miejsca poza ekwipunkiem.
 
 ## FAQ
 ### Program został wykryty jako wirus. Co zrobić w takiej sytuacji?
