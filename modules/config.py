@@ -22,17 +22,10 @@ backgroundMining = {
     'windowName': file["BackgroundMining"]["windowName"],
     'isBlazingPack': file["BackgroundMining"]["isBlazingPack"].lower() == "true",
 }
-# - 20 dla normalnego mc w Y
 slots = {
     'firstRowX': int(file["Slots"]["firstRowX"]),
-    'firstRowY': -int(file["Slots"]["firstRowY"]) + 50,
-    'secondRowX': int(file["Slots"]["secondRowX"]),
-    'secondRowY': -int(file["Slots"]["secondRowY"]) + 50,
-    'thirdRowX': int(file["Slots"]["thirdRowX"]),
-    'thirdRowY': -int(file["Slots"]["thirdRowY"]) + 50,
-    'fourthRowX': int(file["Slots"]["fourthRowX"]),
-    'fourthRowY': -int(file["Slots"]["fourthRowY"]) + 50,
+    'firstRowY': int(file["Slots"]["firstRowY"]),
     'dropX': int(file["Slots"]["dropX"]),
-    'dropY': -int(file["Slots"]["dropY"]) + 50,
+    'dropY': int(file["Slots"]["dropY"]),
     'difference': int(file["Slots"]["difference"])
 }

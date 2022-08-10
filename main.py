@@ -75,82 +75,63 @@ def startMoving():
         eatRounds += 1
         startMoving()
 
-# def dropSlot(backX, backY):
-#     time.sleep(0.05)
-#     windows_management.mouse_left_click()
-#     time.sleep(0.05)
-#     windows_management.mouse_right_click()
-#     time.sleep(0.05)
-#     windows_management.mouse_move(config.slots["dropX"], config.slots["dropY"])
-#     windows_management.maximize()
-#     time.sleep(5)
-#     windows_management.kill_focus()
-#     time.sleep(0.05)
-#     windows_management.mouse_left_click()
-#     time.sleep(0.05)
-#     print(backX, backY)
-#     windows_management.mouse_move(backX, backY)
-#     windows_management.maximize()
-#     time.sleep(5)
-#     windows_management.kill_focus()
-#     time.sleep(0.05)
+def drop_slot(backX, backY):
+    windows_management.mouse_move(backX, backY)
+    time.sleep(0.05)
+    windows_management.mouse_left_click()
+    time.sleep(0.05)
+    windows_management.mouse_right_click()
+    time.sleep(0.05)
+    windows_management.mouse_move(config.slots["dropX"], config.slots["dropY"])
+    time.sleep(0.05)
+    windows_management.mouse_left_click()
+    time.sleep(0.05)
+    windows_management.mouse_move(backX, backY)
+    time.sleep(0.05)
 
+def calculate_inventory_mouse_position(slot):
+    # Rows
+    firstRowIndexes = [1, 2, 3, 4, 5, 6, 7, 8, 9]
+    secondRowIndexes = [10, 11, 12, 13, 14, 15, 16, 17, 18]
+    thirdRowIndexes = [19, 20, 21, 22, 23, 24, 25, 26, 27]
+    fourthRowIndexes = [28, 29, 30, 31, 32, 33, 34, 35, 36]
 
-# def drop():
-#     global dropSlots
-#     time.sleep(0.25)
+    if config.backgroundMining["isBlazingPack"]:
+        if slot in firstRowIndexes:
+            return (config.slots["firstRowX"] + (firstRowIndexes.index(slot) * config.slots["difference"]), -config.slots["firstRowY"] + 50)
+        elif slot in secondRowIndexes:
+            return (config.slots["firstRowX"] + (secondRowIndexes.index(slot) * config.slots["difference"]), -config.slots["firstRowY"] + 50 + config.slots["difference"])
+        elif slot in thirdRowIndexes:
+            return (config.slots["firstRowX"] + (thirdRowIndexes.index(slot) * config.slots["difference"]), -config.slots["firstRowY"] + 50 + (2 * config.slots["difference"]))
+        elif slot in fourthRowIndexes:
+            return (config.slots["firstRowX"] + (fourthRowIndexes.index(slot) * config.slots["difference"]), -config.slots["firstRowY"] + 50 + (3 * config.slots["difference"]))
+    else:
+        if slot in firstRowIndexes:
+            return (config.slots["firstRowX"] + (firstRowIndexes.index(slot) * config.slots["difference"]), config.slots["firstRowY"] - 20)
+        elif slot in secondRowIndexes:
+            return (config.slots["firstRowX"] + (secondRowIndexes.index(slot) * config.slots["difference"]), config.slots["firstRowY"] - 20 + config.slots["difference"])
+        elif slot in thirdRowIndexes:
+            return (config.slots["firstRowX"] + (thirdRowIndexes.index(slot) * config.slots["difference"]), config.slots["firstRowY"] - 20 + (2 * config.slots["difference"]))
+        elif slot in fourthRowIndexes:
+            return (config.slots["firstRowX"] + (fourthRowIndexes.index(slot) * config.slots["difference"]), config.slots["firstRowY"] - 20 + (3 * config.slots["difference"]))
 
-#     windows_management.press_key("e")
-#     windows_management.release_key("e")
+def drop():
+    global dropSlots
 
-#     time.sleep(0.25)
+    # Open inventory
+    time.sleep(0.25)
+    windows_management.press_key("e")
+    windows_management.release_key("e")
+    time.sleep(0.25)
 
-#     # First row
-#     windows_management.mouse_move(config.slots["firstRowX"], config.slots["firstRowY"])
-#     firstStart = 1
-#     for i in range(1, 10):
-#         if i in dropSlots:
-#             dropSlot(config.slots["firstRowX"] + (firstStart * config.slots["difference"]), config.slots["firstRowY"])
-#         time.sleep(0.1)
-#         windows_management.mouse_move(config.slots["firstRowX"] + (firstStart * config.slots["difference"]), config.slots["firstRowY"])
-#         firstStart += 1
+    for slot in dropSlots:
+        drop_slot(calculate_inventory_mouse_position(slot))
 
-#     # Second row
-#     windows_management.mouse_move(config.slots["secondRowX"], config.slots["secondRowY"])
-#     secondStart = 1
-#     for i in range(10, 19):
-#         if i in dropSlots:
-#             dropSlot(config.slots["secondRowX"] + (secondStart * config.slots["difference"]), config.slots["secondRowY"])
-#         time.sleep(0.1)
-#         windows_management.mouse_move(config.slots["secondRowX"] + (secondStart * config.slots["difference"]), config.slots["secondRowY"])
-#         secondStart += 1
-
-#     # Third row
-#     windows_management.mouse_move(config.slots["thirdRowX"], config.slots["thirdRowY"])
-#     thirdStart = 1
-#     for i in range(19, 28):
-#         if i in dropSlots:
-#             dropSlot(config.slots["thirdRowX"] + (thirdStart * config.slots["difference"]), config.slots["thirdRowY"])
-#         time.sleep(0.1)
-#         windows_management.mouse_move(config.slots["thirdRowX"] + (thirdStart * config.slots["difference"]), config.slots["thirdRowY"])
-#         thirdStart += 1
-
-#     # Fourth row
-#     windows_management.mouse_move(config.slots["fourthRowX"], config.slots["fourthRowY"])
-#     fourthStart = 1
-#     for i in range(28, 37):
-#         if i in dropSlots:
-#             dropSlot(config.slots["fourthRowX"] + (fourthStart * config.slots["difference"]), config.slots["fourthRowY"])
-#         time.sleep(0.1)
-#         windows_management.mouse_move(config.slots["fourthRowX"] + (fourthStart * config.slots["difference"]), config.slots["fourthRowY"])
-#         fourthStart += 1
-
-#     time.sleep(0.25)
-
-#     windows_management.press_key("e")
-#     windows_management.release_key("e")
-
-#     time.sleep(0.25)
+    # Close inventory
+    time.sleep(0.25)
+    windows_management.press_key("e")
+    windows_management.release_key("e")
+    time.sleep(0.25)
 
 def eat():
     time.sleep(0.1)
@@ -277,25 +258,12 @@ def stop_mining():
 # GUI initialization
 root = Tk()
 root.title("MineAFK (" + config.version + ")")
-root.geometry("640x360")
+root.geometry("320x180")
 
-start_mining_button = tkinter.Button(root, text="Start", width=8, command=start_mining)
-start_mining_button.pack()
+start_mining_button = tkinter.Button(root, text="Start", width=8, pady=8, command=start_mining)
+start_mining_button.pack(padx=10, pady=10)
 
-stop_mining_button = tkinter.Button(root, text="Stop", width=8, command=stop_mining)
-stop_mining_button.pack()
-
-def send_test():
-    windows_management.send_blazingpack_messages()
-    time.sleep(1)
-    windows_management.kill_focus()
-    time.sleep(1)
-    eat()
-    # windows_management.mouse_move(815, -495)
-    time.sleep(1)
-    windows_management.maximize()
-
-send_button = tkinter.Button(root, text="Send", width=8, command=send_test)
-send_button.pack()
+stop_mining_button = tkinter.Button(root, text="Stop", width=8, pady=8, command=stop_mining)
+stop_mining_button.pack(padx=10, pady=10)
 
 root.mainloop()
