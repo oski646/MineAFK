@@ -5,27 +5,23 @@ file.read("config.ini")
 
 # Global variables
 version = file["Version"]["version"]
-horizontalStones = int(file["Config"]["horizontalStones"])
-verticalStones = int(file["Config"]["verticalStones"])
+horizontal_stones = int(file["Config"]["horizontal_stones"])
+vertical_stones = int(file["Config"]["vertical_stones"])
 pickaxe = int(file["Config"]["pickaxe"])
 food = int(file["Config"]["food"])
-dropSlots = file["Config"]["dropSlots"].split(",")
-activityRoundsConfig = int(file["Config"]["activityRounds"])
-activityCommands = file["Config"]["activityCommands"].split(",")
-cobblexRoundsConfig = int(file["Config"]["cobblexRounds"])
-cobblexCommands = file["Config"]["cobblexCommands"].split(",")
-dropRoundsConfig = int(file["Config"]["dropRounds"])
-eatRoundsConfig = int(file["Config"]["eatRounds"])
-commandsDelayInSeconds = float(file["Config"]["commandsDelayInSeconds"])
-fastPickaxe = file["Config"]["fastPickaxe"].lower() == "true"
-backgroundMining = {
-    'windowName': file["BackgroundMining"]["windowName"],
-    'isBlazingPack': file["BackgroundMining"]["isBlazingPack"].lower() == "true",
-}
+drop_slots = file["Config"]["drop_slots"].split(",")
+activity_rounds_config = int(file["Config"]["activity_rounds"])
+activity_commands = file["Config"]["activity_commands"].split(",")
+cobblex_rounds_config = int(file["Config"]["cobblex_rounds"])
+cobblex_commands = file["Config"]["cobblex_commands"].split(",")
+drop_rounds_config = int(file["Config"]["drop_rounds"])
+eat_rounds_config = int(file["Config"]["eat_rounds"])
+commands_delay_in_seconds = float(file["Config"]["commands_delay_in_seconds"])
+fast_pickaxe = file["Config"]["fast_pickaxe"].lower() == "true"
 slots = {
-    'firstRowX': int(file["Slots"]["firstRowX"]),
-    'firstRowY': int(file["Slots"]["firstRowY"]),
-    'dropX': int(file["Slots"]["dropX"]),
-    'dropY': int(file["Slots"]["dropY"]),
+    'first_row_x': int(file["Slots"]["first_row_x"]),
+    'first_row_y': int(file["Slots"]["first_row_y"]),
+    'drop_x': int(file["Slots"]["drop_x"]),
+    'drop_y': int(file["Slots"]["drop_y"]),
     'difference': int(file["Slots"]["difference"])
 }

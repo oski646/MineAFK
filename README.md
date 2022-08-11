@@ -31,32 +31,27 @@ poetry install
 version = 0.5 BETA
 
 [Config]
-horizontalStones = 7 <-- ile jest stoniarek w szerokości
-verticalStones = 2 <-- ile jest stoniarek przód/tył
+horizontal_stones = 7 <-- ile jest stoniarek w szerokości
+vertical_stones = 2 <-- ile jest stoniarek przód/tył
 pickaxe = 8 <-- slot kilofa
-eatRounds = 3 <-- co ile rund ma jeść
+eat_rounds = 3 <-- co ile rund ma jeść
 food = 0 <-- slot mięska (ustaw 0 jeśli nie chcesz jeść)
-dropRounds = 4 <-- co ile rund ma wyrzucać itemy
-dropSlots = 6,7 <-- sloty do wyrzucenia
-activityRounds = 1 <-- co ile rund ma się wykonać "aktywność"
-activityCommands = naprawkilof <-- komendy do wykonania "aktywności"
-cobblexRounds = 2 <-- co ile rund ma się tworzyć cobblex
-cobblexCommands = cx,cx <-- komendy do wytworzenia cobblex
-commandsDelayInSeconds = 0.5 <-- odstęp w sekundach między wykonywaniem dwóch komend
-fastPickaxe = true <-- czy kopanie jest na kilofie 6/3/3
-
-[BackgroundMining]
-windowName = Minecraft 1.19.2 - Multiplayer (3rd-party Server) <-- dokładna nazwa okna minecrafta
-isBlazingPack = false <-- czy wybrane okno minecraft to blazingpack
+drop_rounds = 4 <-- co ile rund ma wyrzucać itemy
+drop_slots = 6,7 <-- sloty do wyrzucenia
+activity_rounds = 1 <-- co ile rund ma się wykonać "aktywność"
+activity_commands = naprawkilof <-- komendy do wykonania "aktywności"
+cobblex_rounds = 2 <-- co ile rund ma się tworzyć cobblex
+cobblex_commands = cx,cx <-- komendy do wytworzenia cobblex
+commands_delay_in_seconds = 0.5 <-- odstęp w sekundach między wykonywaniem dwóch komend
+fast_pickaxe = true <-- czy kopanie jest na kilofie 6/3/3
 
 # (!) TA CAŁA SEKCJA WAS NIE INTERESUJE (!) #
 # Jeśli chcecie coś tutaj zmieniać macie od tego "Slot reader" #
 [Slots]
-[Slots]
-firstRowX = 815
-firstRowY = 545
-dropX = 371
-dropY = 291
+first_row_x = 815
+first_row_y = 545
+drop_x = 371
+drop_y = 291
 # Optymalna wartość tej zmiennej to 36, jeśli screen reader ci źle czyta sloty spróbuj zmienić tylko tą zmienną po otrzymaniu configu #
 difference = 36 
 ```

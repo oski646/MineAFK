@@ -10,7 +10,6 @@ python = ">=3.10,<3.11"
 pynput = "^1.7.6"
 requests = "^2.28.1"
 pyinstaller = "^5.2"
-pywin32 = "^304"
 
 [tool.poetry.dev-dependencies]
 

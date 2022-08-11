@@ -1,276 +1,269 @@
-import tkinter
+from pynput.keyboard import Key, Controller as KeyboardController
+from pynput.mouse import Button, Controller as MouseController
+from pynput import keyboard as KeyboardManager
 import time
 import threading
-from tkinter import Tk
 
 import modules.config as config
 import modules.logger as logger
 import modules.check_version as check_version
 import modules.welcome_message as welcome_message
-import modules.windows_management as windows_management
 
 # ----- DO NOT TOUCH THIS SECTION -----
 mining = False
-miningThread = None
-miningThreadStop = False
-activityThread = None
-activityThreadStop = False
-dropSlots = [int(x) for x in config.dropSlots]
-activityRounds = 0
-cobblexRounds = 0
-dropRounds = 0
-eatRounds = 0
+mining_thread = None
+mining_thread_stop = False
+activity_thread = None
+activity_thread_stop = False
+drop_slots = [int(x) for x in config.drop_slots]
+activity_rounds = 0
+cobblex_rounds = 0
+drop_rounds = 0
+eat_rounds = 0
 # ----- DO NOT TOUCH THIS SECTION -----
+
+# Mouse controller
+mouse = MouseController()
+# Keyboard controller
+keyboard = KeyboardController()
 
 welcome_message.send()
 logger.info("Włączanie skryptu...")
 check_version.run()
 
 # Release all necessary keys
-def releaseAll():
-    windows_management.mouse_left_click_release()
-    windows_management.release_key("a")
-    windows_management.release_key("d")
+def release_all():
+    mouse.release(Button.left)
+    keyboard.release("a")
+    keyboard.release("d")
 
 # Function for player moving
-def startMoving():
-    global miningThreadStop
-    global activityRounds, cobblexRounds, dropRounds, eatRounds
+def start_moving():
+    global mining_thread_stop
+    global activity_rounds, cobblex_rounds, drop_rounds, eat_rounds
     while True:
-        if miningThreadStop == True:
+        if mining_thread_stop == True:
             break
 
-        windows_management.mouse_left_click_press()
-        if config.fastPickaxe:
+        mouse.press(Button.left)
+        if config.fast_pickaxe:
             # Delays
-            horizontalDelay = (config.horizontalStones / 4) - 0.2
-            verticalDelay = (config.verticalStones / 4) - 0.2
+            horizontal_delay = (config.horizontal_stones / 4) - 0.2
+            vertical_delay = (config.vertical_stones / 4) - 0.2
 
             # Move to the right
-            windows_management.press_key("d")
-            time.sleep(horizontalDelay)
-            windows_management.release_key("d")
+            keyboard.press("d")
+            time.sleep(horizontal_delay)
+            keyboard.release("d")
 
             # Move forward
-            if config.verticalStones > 0:
-                windows_management.press_key("w")
-                time.sleep(verticalDelay)
-                windows_management.release_key("w")
+            if config.vertical_stones > 0:
+                keyboard.press("w")
+                time.sleep(vertical_delay)
+                keyboard.release("w")
 
             # Move to the left
-            windows_management.press_key("a")
-            time.sleep(horizontalDelay)
-            windows_management.release_key("a")
+            keyboard.press("a")
+            time.sleep(horizontal_delay)
+            keyboard.release("a")
 
             # Move backward
-            if config.verticalStones > 0:
-                windows_management.press_key("s")
-                time.sleep(verticalDelay)
-                windows_management.release_key("s")
+            if config.vertical_stones > 0:
+                keyboard.press("s")
+                time.sleep(vertical_delay)
+                keyboard.release("s")
         else:
             time.sleep(5)
-        activityRounds += 1
-        cobblexRounds += 1
-        dropRounds += 1
-        eatRounds += 1
-        startMoving()
+        activity_rounds += 1
+        cobblex_rounds += 1
+        drop_rounds += 1
+        eat_rounds += 1
+        start_moving()
 
-def drop_slot(backX, backY):
-    windows_management.mouse_move(backX, backY)
+def drop_slot(x, y):
+    mouse.position = (x, y)
     time.sleep(0.05)
-    windows_management.mouse_left_click()
+    mouse.click(Button.left)
     time.sleep(0.05)
-    windows_management.mouse_right_click()
+    mouse.click(Button.right)
     time.sleep(0.05)
-    windows_management.mouse_move(config.slots["dropX"], config.slots["dropY"])
+    mouse.position = (config.slots["drop_x"], config.slots["drop_y"])
     time.sleep(0.05)
-    windows_management.mouse_left_click()
+    mouse.click(Button.left)
     time.sleep(0.05)
-    windows_management.mouse_move(backX, backY)
+    mouse.position = (x, y)
     time.sleep(0.05)
 
 def calculate_inventory_mouse_position(slot):
     # Rows
-    firstRowIndexes = [1, 2, 3, 4, 5, 6, 7, 8, 9]
-    secondRowIndexes = [10, 11, 12, 13, 14, 15, 16, 17, 18]
-    thirdRowIndexes = [19, 20, 21, 22, 23, 24, 25, 26, 27]
-    fourthRowIndexes = [28, 29, 30, 31, 32, 33, 34, 35, 36]
+    first_row_indexes = [1, 2, 3, 4, 5, 6, 7, 8, 9]
+    second_row_indexes = [10, 11, 12, 13, 14, 15, 16, 17, 18]
+    third_row_indexes = [19, 20, 21, 22, 23, 24, 25, 26, 27]
+    fourth_row_indexes = [28, 29, 30, 31, 32, 33, 34, 35, 36]
 
-    if config.backgroundMining["isBlazingPack"]:
-        if slot in firstRowIndexes:
-            return (config.slots["firstRowX"] + (firstRowIndexes.index(slot) * config.slots["difference"]), -config.slots["firstRowY"] + 50)
-        elif slot in secondRowIndexes:
-            return (config.slots["firstRowX"] + (secondRowIndexes.index(slot) * config.slots["difference"]), -config.slots["firstRowY"] + 50 + config.slots["difference"])
-        elif slot in thirdRowIndexes:
-            return (config.slots["firstRowX"] + (thirdRowIndexes.index(slot) * config.slots["difference"]), -config.slots["firstRowY"] + 50 + (2 * config.slots["difference"]))
-        elif slot in fourthRowIndexes:
-            return (config.slots["firstRowX"] + (fourthRowIndexes.index(slot) * config.slots["difference"]), -config.slots["firstRowY"] + 50 + (3 * config.slots["difference"]))
-    else:
-        if slot in firstRowIndexes:
-            return (config.slots["firstRowX"] + (firstRowIndexes.index(slot) * config.slots["difference"]), config.slots["firstRowY"] - 20)
-        elif slot in secondRowIndexes:
-            return (config.slots["firstRowX"] + (secondRowIndexes.index(slot) * config.slots["difference"]), config.slots["firstRowY"] - 20 + config.slots["difference"])
-        elif slot in thirdRowIndexes:
-            return (config.slots["firstRowX"] + (thirdRowIndexes.index(slot) * config.slots["difference"]), config.slots["firstRowY"] - 20 + (2 * config.slots["difference"]))
-        elif slot in fourthRowIndexes:
-            return (config.slots["firstRowX"] + (fourthRowIndexes.index(slot) * config.slots["difference"]), config.slots["firstRowY"] - 20 + (3 * config.slots["difference"]))
+    if slot in first_row_indexes:
+        return (config.slots["first_row_x"] + (first_row_indexes.index(slot) * config.slots["difference"]), config.slots["first_row_y"])
+    elif slot in second_row_indexes:
+        return (config.slots["first_row_x"] + (second_row_indexes.index(slot) * config.slots["difference"]), config.slots["first_row_y"] + config.slots["difference"])
+    elif slot in third_row_indexes:
+        return (config.slots["first_row_x"] + (third_row_indexes.index(slot) * config.slots["difference"]), config.slots["first_row_y"] + (2 * config.slots["difference"]))
+    elif slot in fourth_row_indexes:
+        return (config.slots["first_row_x"] + (fourth_row_indexes.index(slot) * config.slots["difference"]), config.slots["first_row_y"] + (3 * config.slots["difference"]))
 
 def drop():
-    global dropSlots
+    global drop_slots
 
     # Open inventory
     time.sleep(0.25)
-    windows_management.press_key("e")
-    windows_management.release_key("e")
+    keyboard.press("e")
+    keyboard.release("e")
     time.sleep(0.25)
 
-    for slot in dropSlots:
+    for slot in drop_slots:
         drop_slot(calculate_inventory_mouse_position(slot)[0], calculate_inventory_mouse_position(slot)[1])
 
     # Close inventory
     time.sleep(0.25)
-    windows_management.press_key("e")
-    windows_management.release_key("e")
+    keyboard.press("e")
+    keyboard.release("e")
     time.sleep(0.25)
 
 def eat():
     time.sleep(0.1)
-    windows_management.press_key(str(config.food))
-    windows_management.release_key(str(config.food))
+    keyboard.press(str(config.food))
+    keyboard.release(str(config.food))
     time.sleep(0.1)
-    windows_management.mouse_right_click_press()
+    mouse.press(Button.right)
     time.sleep(3)
-    windows_management.mouse_right_click_release()
+    mouse.release(Button.right)
     time.sleep(0.1)
-    windows_management.press_key(str(config.pickaxe))
-    windows_management.release_key(str(config.pickaxe))
+    keyboard.press(str(config.pickaxe))
+    keyboard.release(str(config.pickaxe))
 
-def sendCommand(command):
-    windows_management.mouse_left_click_release()
-    if config.backgroundMining["isBlazingPack"]:
-        windows_management.update_mouse_position()
-    windows_management.press_key("t")
-    windows_management.release_key("t")
-    time.sleep(0.05)
-    windows_management.type_string("/" + command)
-    time.sleep(0.05)
-    windows_management.click_enter()
-    if config.backgroundMining["isBlazingPack"]:
-        windows_management.restore_mouse_position()
-    time.sleep(config.commandsDelayInSeconds)
+def send_command(command):
+    mouse.release(Button.right)
+    keyboard.press("t")
+    keyboard.release("t")
+    time.sleep(0.2)
+    keyboard.press("/")
+    keyboard.release("/")
+    time.sleep(0.2)
+    keyboard.type(command)
+    keyboard.press(Key.enter)
+    keyboard.release(Key.enter)
+    time.sleep(config.commands_delay_in_seconds)
 
 # Activity
 def activity():
-    global miningThread
-    global miningThreadStop
-    global activityThreadStop
-    global activityRounds, cobblexRounds, dropRounds, eatRounds
+    global mining_thread
+    global mining_thread_stop
+    global activity_thread_stop
+    global activity_rounds, cobblex_rounds, drop_rounds, eat_rounds
 
     while True:
-        if activityThreadStop == True:
+        if activity_thread_stop == True:
             break
-        if activityRounds == (config.activityRoundsConfig - 1) or cobblexRounds == (config.cobblexRoundsConfig - 1) or dropRounds == (config.dropRoundsConfig - 1) or eatRounds == (config.eatRoundsConfig - 1):
-            if miningThread != None:
-                miningThreadStop = True
-                miningThread.join()
-                miningThread = None
+        if activity_rounds == (config.activity_rounds_config - 1) or cobblex_rounds == (config.cobblex_rounds_config - 1) or drop_rounds == (config.drop_rounds_config - 1) or eat_rounds == (config.eat_rounds_config - 1):
+            if mining_thread != None:
+                mining_thread_stop = True
+                mining_thread.join()
+                mining_thread = None
 
                 # Activity
-                if activityRounds == config.activityRoundsConfig:
-                    for command in config.activityCommands:
-                        sendCommand(command)
-                    activityRounds = 0
+                if activity_rounds == config.activity_rounds_config:
+                    for command in config.activity_commands:
+                        send_command(command)
+                    activity_rounds = 0
                 # Cobblex commands
-                if cobblexRounds == config.cobblexRoundsConfig:
-                    for command in config.cobblexCommands:
-                        sendCommand(command)
-                    cobblexRounds = 0
+                if cobblex_rounds == config.cobblex_rounds_config:
+                    for command in config.cobblex_commands:
+                        send_command(command)
+                    cobblex_rounds = 0
                 # Drop slots
-                if dropRounds == config.dropRoundsConfig:
+                if drop_rounds == config.drop_rounds_config:
                     drop()
-                    dropRounds = 0
+                    drop_rounds = 0
                 # Eating
                 if config.food >= 1 and config.food <= 9:
-                    if eatRounds == config.eatRoundsConfig:
+                    if eat_rounds == config.eat_rounds_config:
                         eat()
-                        eatRounds = 0
+                        eat_rounds = 0
 
                 time.sleep(1)
 
                 # Start moving thread
-                miningThreadStop = False
-                miningThread = threading.Thread(target = startMoving)
-                miningThread.start()
+                mining_thread_stop = False
+                mining_thread = threading.Thread(target = start_moving)
+                mining_thread.start()
 
 def start_mining():
     global mining
-    global miningThread
-    global miningThreadStop
-    global activityThread
-    global activityThreadStop
-    global roundCount
+    global mining_thread
+    global mining_thread_stop
+    global activity_thread
+    global activity_thread_stop
+    global round_count
     if mining == False:
-        if config.backgroundMining["isBlazingPack"]:
-            logger.info("Sending blazingpack messages")
-            windows_management.send_blazingpack_messages()
-            time.sleep(1)
-            logger.info("Minimizing blazingpack window")
-            windows_management.minimize()
-        else:
-            windows_management.set_focus()
-        time.sleep(2)
-
         # Start moving thread
-        miningThread = threading.Thread(target = startMoving)
-        miningThread.start()
+        mining_thread = threading.Thread(target = start_moving)
+        mining_thread.start()
 
-        roundCount = 0
+        round_count = 0
 
         # Start command thread
-        activityThread = threading.Thread(target = activity)
-        activityThread.start()
+        activity_thread = threading.Thread(target = activity)
+        activity_thread.start()
         
         mining = True
         logger.info("Zaczęto kopanie na AFK'u!")
 
 def stop_mining():
     global mining
-    global miningThread
-    global miningThreadStop
-    global activityThread
-    global activityThreadStop
-    global roundCount
+    global mining_thread
+    global mining_thread_stop
+    global activity_thread
+    global activity_thread_stop
+    global round_count
     logger.info("Zatrzymywanie kopania...")
     logger.info("Zaczekaj na zakończenie wątków!")
 
     # Stop mining
     mining = False
-    roundCount = 0
-    activityThreadStop = True
-    activityThread.join()
-    activityThread = None
-    miningThreadStop = True
-    miningThread.join()
-    miningThread = None
+    round_count = 0
+    activity_thread_stop = True
+    activity_thread.join()
+    activity_thread = None
+    mining_thread_stop = True
+    mining_thread.join()
+    mining_thread = None
 
     logger.info("Kopanie zostało zatrzymane!")
 
     # Release all necessary keys
-    releaseAll()
+    release_all()
 
-    activityThreadStop = False
-    miningThreadStop = False
+    activity_thread_stop = False
+    mining_thread_stop = False
 
-# GUI initialization
-root = Tk()
-root.title("MineAFK (" + config.version + ")")
-root.iconbitmap('pickaxe.ico')
-root.geometry("320x180")
+# ----------------------------------------------------------------------------------------------------------------------
 
-start_mining_button = tkinter.Button(root, text="Start", width=8, pady=8, command=start_mining)
-start_mining_button.pack(padx=10, pady=10)
+def on_press(key):
+    pass
 
-stop_mining_button = tkinter.Button(root, text="Stop", width=8, pady=8, command=stop_mining)
-stop_mining_button.pack(padx=10, pady=10)
+def on_release(key):
+    if key == KeyboardManager.Key.f8:
+        start_mining()
+    if key == KeyboardManager.Key.f9:
+        stop_mining()
+    if key == KeyboardManager.Key.f10:
+        release_all()
+        return False
 
-root.mainloop()
+with KeyboardManager.Listener(
+        on_press=on_press,
+        on_release=on_release) as listener:
+    listener.join()
+listener = KeyboardManager.Listener(
+    on_press=on_press,
+    on_release=on_release)
+listener.start()
