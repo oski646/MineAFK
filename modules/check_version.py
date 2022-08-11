@@ -6,13 +6,13 @@ import json
 def run():
     logger.info("Sprawdzanie aktualizacji...")
     response = requests.get("https://raw.githubusercontent.com/oski646/MineAFK/master/version.txt")
-    responseVersion = response.text
-    if responseVersion != config.version:
+    response_version = response.text
+    if response_version != config.version:
         logger.info("Twoja wersja jest nieaktualna, pobierz aktualną z: https://github.com/oski646/MineAFK")
-        changesResponse = requests.get("https://api.github.com/repos/oski646/MineAFK/commits/master")
-        changesResponse = requests.get("https://api.github.com/repos/oski646/MineAFK/commits/master")
-        changesJson = json.loads(changesResponse.text)
-        changes = changesJson["commit"]["message"]
+        changes_response = requests.get("https://api.github.com/repos/oski646/MineAFK/commits/master")
+        changes_response = requests.get("https://api.github.com/repos/oski646/MineAFK/commits/master")
+        changes_json = json.loads(changes_response.text)
+        changes = changes_json["commit"]["message"]
         print("")
         print("Changelog")
         print(changes)
