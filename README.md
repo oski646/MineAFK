@@ -79,7 +79,7 @@ difference = 36
  *Zawsze na slocie, który ma być wyrzucony zostanie wyrzucone **stack - 1** czyli jeśli mamy na slocie 64 złota to wyrzucimy tylko 63 aby zostawić 1 na tym slocie*
  
 ## Slot reader
-W celu poprawnego skonfigurowania slotów odpalamy `MineAFK.exe` i klikamy `Start Slot Reader`. Aplikacja prosi o zeskanowanie pozycji klawiszem **F8**. **(skanujemy sam środek slota)**
+W celu poprawnego skonfigurowania slotów odpalamy `MineAFK.exe` i klikamy `Start czytnika`. Aplikacja prosi o zeskanowanie slotu 1, slotu 2 i miejsca wyrzucania itemów klawiszem **F8**. **(skanujemy sam środek slota)**
 
 ![Zdjęcie](https://i.imgur.com/nyRreuU.png)
 
