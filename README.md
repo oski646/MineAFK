@@ -7,14 +7,30 @@ Skrypt stworzony dla społeczności ludzi kopiących AFK na serwerach minecraft
 ## Instalacja manualna
 1. Pobierz sobie repozytorium - [link](https://github.com/oski646/MineAFK/archive/master.zip)
 2. Przejdź do folderu z repozytorium
-3. Zainstaluj poetry - [link](https://python-poetry.org/docs/#installation)
+3. Zainstaluj uv - [link](https://docs.astral.sh/uv/getting-started/installation/)
 4. Zainstaluj wszystkie zależności
 ```
-poetry install
+uv sync
 ```
 4. Włączenie:
-- skryptu: ```poetry run python main.py```
-- slot readera: ```poetry run python mouse-position.py```
+- skryptu: ```uv run python main.py```
+- slot readera: ```uv run python mouse-position.py```
+
+## Budowanie plików `.exe` na Windows
+1. Zainstaluj zależności
+```
+uv sync --group build
+```
+2. Zbuduj aplikację
+```
+powershell -ExecutionPolicy Bypass -File .\app\build.ps1
+```
+3. Gotowe pliki znajdziesz w folderze `dist`.
+
+Jeśli masz włączone lokalne skrypty PowerShell, możesz też uruchomić krócej:
+```
+.\app\build.ps1
+```
 
 ## Instalacja automatyczna
 1. Pobierz najnowszą wersję paczki - [link](https://github.com/oski646/MineAFK/releases)
@@ -28,7 +44,7 @@ poetry install
 ```
 # (!) PROSZĘ TEGO NIE RUSZAĆ (!) #
 [Version]
-version = 0.5 BETA
+version = 0.7.0 BETA
 
 [Config]
 horizontal_stones = 7 <-- ile jest stoniarek w szerokości

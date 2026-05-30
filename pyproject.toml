@@ -1,18 +1,22 @@
-[tool.poetry]
+[project]
 name = "mineafk"
-version = "0.4.1 BETA"
+version = "0.7.0b0"
 description = "Script which allows people to automatically dig stone and collect resources."
-authors = ["oski646 <me.oski646@gmail.com>"]
+readme = "README.md"
+requires-python = ">=3.14,<3.15"
 license = "MIT"
+authors = [
+    { name = "oski646", email = "me.oski646@gmail.com" },
+]
+dependencies = [
+    "pynput>=1.8.2,<2.0.0",
+    "requests>=2.34.2,<3.0.0",
+]
 
-[tool.poetry.dependencies]
-python = ">=3.10,<3.11"
-pynput = "^1.7.6"
-requests = "^2.28.1"
-pyinstaller = "^5.2"
+[dependency-groups]
+build = [
+    "pyinstaller>=6.20.0,<7.0.0",
+]
 
-[tool.poetry.dev-dependencies]
-
-[build-system]
-requires = ["poetry-core>=1.0.0"]
-build-backend = "poetry.core.masonry.api"
+[tool.uv]
+package = false
