@@ -8,6 +8,11 @@ from tkinter import ttk
 
 import modules.check_version as check_version
 import modules.config as config
+from modules.input_backends import BACKGROUND_MODE
+from modules.input_backends import FOREGROUND_MODE
+from modules.input_backends import enumerate_windows
+from modules.input_backends import find_minecraft_window
+from modules.input_backends import is_background_input_supported
 from modules.mining_controller import MiningController
 from modules.slot_reader import SlotReader
 
@@ -22,9 +27,14 @@ class MineAfkApp(tk.Tk):
     def __init__(self):
         super().__init__()
         self.title("MineAFK")
-        self.geometry("760x700")
-        self.minsize(680, 640)
+        self.geometry("760x740")
+        self.minsize(680, 680)
         self.log_queue = queue.Queue()
+        self.mode_var = tk.StringVar(value=FOREGROUND_MODE)
+        self.window_var = tk.StringVar()
+        self.window_targets = []
+        self.window_by_display = {}
+        self.background_available = is_background_input_supported()
 
         try:
             self.iconbitmap(default=str(resource_path("pickaxe.ico")))
@@ -34,8 +44,10 @@ class MineAfkApp(tk.Tk):
         self.mining = MiningController(log=self.log)
         self.slot_reader = SlotReader(log=self.log, on_complete=self.on_slot_reader_complete)
         self.mining.set_slot_reader_active(lambda: self.slot_reader.blocks_mining_hotkeys)
+        self.mining.set_start_options(self._selected_start_options)
 
         self._build_ui()
+        self._refresh_window_targets(log_result=False)
         self._refresh_config_summary()
         self._poll_logs()
         self.mining.start_hotkeys()
@@ -55,13 +67,40 @@ class MineAfkApp(tk.Tk):
 
         controls = ttk.LabelFrame(self, text="Sterowanie AFK", padding=12)
         controls.grid(row=1, column=0, sticky="ew", padx=16, pady=8)
-        controls.columnconfigure(3, weight=1)
+        controls.columnconfigure(4, weight=1)
 
-        ttk.Button(controls, text="Uruchom AFK", command=self.mining.start).grid(row=0, column=0, padx=(0, 8))
-        ttk.Button(controls, text="Zatrzymaj", command=self._stop_mining_async).grid(row=0, column=1, padx=(0, 8))
-        ttk.Button(controls, text="Zwolnij klawisze", command=self._release_keys).grid(row=0, column=2, padx=(0, 8))
+        ttk.Label(controls, text="Tryb:").grid(row=0, column=0, sticky="w", padx=(0, 8))
+        ttk.Radiobutton(
+            controls,
+            text="Na pierwszym planie",
+            value=FOREGROUND_MODE,
+            variable=self.mode_var,
+            command=self._on_mode_changed,
+        ).grid(row=0, column=1, sticky="w", padx=(0, 8))
+        self.background_radio = ttk.Radiobutton(
+            controls,
+            text="W tle",
+            value=BACKGROUND_MODE,
+            variable=self.mode_var,
+            command=self._on_mode_changed,
+        )
+        self.background_radio.grid(row=0, column=2, sticky="w", padx=(0, 8))
+        if not self.background_available:
+            self.background_radio.configure(state="disabled")
+
         self.status_label = ttk.Label(controls, text="Bezczynny")
-        self.status_label.grid(row=0, column=3, sticky="e")
+        self.status_label.grid(row=0, column=4, sticky="e")
+
+        ttk.Button(controls, text="Uruchom AFK", command=self._start_mining).grid(row=1, column=0, padx=(0, 8), pady=(10, 0))
+        ttk.Button(controls, text="Zatrzymaj", command=self._stop_mining_async).grid(row=1, column=1, padx=(0, 8), pady=(10, 0))
+        self.target_label = ttk.Label(controls, text="Okno:")
+        self.target_combo = ttk.Combobox(controls, textvariable=self.window_var, state="readonly", width=48)
+        self.target_refresh = ttk.Button(controls, text="Odśwież", command=self._refresh_window_targets)
+        self.target_label.grid(row=2, column=0, sticky="w", pady=(10, 0), padx=(0, 8))
+        self.target_combo.grid(row=2, column=1, columnspan=3, sticky="ew", pady=(10, 0), padx=(0, 8))
+        self.target_refresh.grid(row=2, column=4, sticky="e", pady=(10, 0))
+        self.target_widgets = [self.target_label, self.target_combo, self.target_refresh]
+        self._on_mode_changed()
 
         content = ttk.Frame(self, padding=(16, 0, 16, 8))
         content.grid(row=2, column=0, sticky="nsew")
@@ -124,6 +163,51 @@ class MineAfkApp(tk.Tk):
         footer.columnconfigure(0, weight=1)
         ttk.Button(footer, text="Sprawdź aktualizacje", command=self._check_updates_async).grid(row=0, column=0, sticky="w")
 
+    def _on_mode_changed(self):
+        visible = self.mode_var.get() == BACKGROUND_MODE
+        for widget in self.target_widgets:
+            if visible:
+                widget.grid()
+            else:
+                widget.grid_remove()
+
+        if visible and not self.window_targets:
+            self._refresh_window_targets(log_result=False)
+
+    def _refresh_window_targets(self, log_result=True):
+        if not self.background_available:
+            self.window_targets = []
+            self.window_by_display = {}
+            self.target_combo.configure(values=())
+            self.window_var.set("")
+            if log_result:
+                self.log("Tryb w tle jest dostępny tylko na Windows z pywin32.")
+            return
+
+        self.window_targets = enumerate_windows()
+        self.window_by_display = {window.display_name: window for window in self.window_targets}
+        values = list(self.window_by_display.keys())
+        self.target_combo.configure(values=values)
+
+        selected = find_minecraft_window(self.window_targets)
+        self.window_var.set(selected.display_name if selected else "")
+
+        if log_result:
+            self.log(f"Odświeżono listę okien ({len(self.window_targets)}).")
+
+    def _selected_start_options(self):
+        mode = self.mode_var.get()
+        if mode != BACKGROUND_MODE:
+            return FOREGROUND_MODE, None
+        return BACKGROUND_MODE, self._selected_window_target()
+
+    def _selected_window_target(self):
+        return self.window_by_display.get(self.window_var.get())
+
+    def _start_mining(self):
+        mode, target_window = self._selected_start_options()
+        self.mining.start(mode=mode, target_window=target_window)
+
     def log(self, message):
         self.log_queue.put(message)
 
@@ -135,8 +219,17 @@ class MineAfkApp(tk.Tk):
                 break
             self._append_log(message)
 
-        self.status_label.configure(text="Działa" if self.mining.mining else "Bezczynny")
+        if self.mining.mining:
+            self.status_label.configure(text=f"Działa ({self._mode_label(self.mining.active_mode)})")
+        else:
+            self.status_label.configure(text="Bezczynny")
         self.after(100, self._poll_logs)
+
+    def _mode_label(self, mode):
+        return {
+            FOREGROUND_MODE: "na pierwszym planie",
+            BACKGROUND_MODE: "w tle",
+        }.get(mode, mode)
 
     def _append_log(self, message):
         self.log_text.configure(state="normal")
@@ -164,10 +257,6 @@ class MineAfkApp(tk.Tk):
 
     def _stop_mining_async(self):
         threading.Thread(target=self.mining.stop, daemon=True).start()
-
-    def _release_keys(self):
-        self.mining.release_all()
-        self.log("Zwolniono przytrzymane klawisze ruchu i przyciski myszy.")
 
     def on_slot_reader_complete(self, result):
         self.after(0, self._refresh_after_slot_reader)

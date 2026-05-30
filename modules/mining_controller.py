@@ -2,19 +2,29 @@ import threading
 import time
 
 from pynput import keyboard as KeyboardManager
-from pynput.keyboard import Controller as KeyboardController
-from pynput.keyboard import Key
-from pynput.mouse import Button
-from pynput.mouse import Controller as MouseController
 
 import modules.config as config
+from modules.input_backends import BACKGROUND_MODE
+from modules.input_backends import FOREGROUND_MODE
+from modules.input_backends import BackgroundInputError
+from modules.input_backends import PynputInputBackend
+from modules.input_backends import Win32WindowInputBackend
+
+
+def mode_label(mode):
+    return {
+        FOREGROUND_MODE: "na pierwszym planie",
+        BACKGROUND_MODE: "w tle",
+    }.get(mode, mode)
 
 
 class MiningController:
     def __init__(self, log=None):
         self.log = log or (lambda message: None)
-        self.mouse = MouseController()
-        self.keyboard = KeyboardController()
+        self.foreground_backend = PynputInputBackend()
+        self.input = self.foreground_backend
+        self.active_mode = FOREGROUND_MODE
+        self.start_options = lambda: (FOREGROUND_MODE, None)
         self.mining = False
         self.mining_thread = None
         self.activity_thread = None
@@ -23,10 +33,14 @@ class MiningController:
         self.lock = threading.Lock()
         self.hotkey_listener = None
         self.slot_reader_active = lambda: False
+        self.drop_skip_logged = False
         self._reset_rounds()
 
     def set_slot_reader_active(self, callback):
         self.slot_reader_active = callback
+
+    def set_start_options(self, callback):
+        self.start_options = callback
 
     def _reset_rounds(self):
         self.activity_rounds = 0
@@ -35,10 +49,7 @@ class MiningController:
         self.eat_rounds = 0
 
     def release_all(self):
-        self.mouse.release(Button.left)
-        self.mouse.release(Button.right)
-        for key in ("a", "d", "w", "s"):
-            self.keyboard.release(key)
+        self.input.release_all()
 
     def start_hotkeys(self):
         if self.hotkey_listener is not None:
@@ -57,13 +68,14 @@ class MiningController:
         if self.slot_reader_active():
             return
         if key == KeyboardManager.Key.f8:
-            self.start()
+            mode, target_window = self.start_options()
+            self.start(mode=mode, target_window=target_window)
         elif key == KeyboardManager.Key.f9:
             self.stop()
         elif key == KeyboardManager.Key.f10:
             self.release_all()
 
-    def start(self):
+    def start(self, mode=FOREGROUND_MODE, target_window=None):
         with self.lock:
             if self.mining:
                 self.log("Kopanie AFK już działa.")
@@ -71,6 +83,9 @@ class MiningController:
 
             config.reload()
             self._reset_rounds()
+            self.drop_skip_logged = False
+            self.input = self._create_input_backend(mode, target_window)
+            self.active_mode = self.input.mode
             self.mining_stop.clear()
             self.activity_stop.clear()
             self.mining = True
@@ -80,7 +95,24 @@ class MiningController:
             self.mining_thread.start()
             self.activity_thread.start()
 
-        self.log("Rozpoczęto kopanie AFK.")
+        self.log(f"Rozpoczęto kopanie AFK ({mode_label(self.active_mode)}).")
+
+    def _create_input_backend(self, mode, target_window):
+        if mode != BACKGROUND_MODE:
+            return self.foreground_backend
+
+        if target_window is None:
+            self.log("Nie wybrano okna do trybu w tle. Uruchamiam tryb na pierwszym planie.")
+            return self.foreground_backend
+
+        try:
+            backend = Win32WindowInputBackend(target_window)
+            backend.probe()
+            self.log(f"Tryb w tle użyje okna: {target_window.title}")
+            return backend
+        except BackgroundInputError as exc:
+            self.log(f"Tryb w tle jest niedostępny ({exc}). Uruchamiam tryb na pierwszym planie.")
+            return self.foreground_backend
 
     def stop(self):
         with self.lock:
@@ -103,6 +135,8 @@ class MiningController:
         with self.lock:
             self.mining_thread = None
             self.activity_thread = None
+            self.input = self.foreground_backend
+            self.active_mode = FOREGROUND_MODE
             self._reset_rounds()
 
         self.log("Kopanie AFK zostało zatrzymane.")
@@ -114,57 +148,67 @@ class MiningController:
     def _sleep(self, seconds, stop_event):
         return stop_event.wait(max(0, seconds))
 
+    def _fail_active_run(self, message):
+        self.log(message)
+        with self.lock:
+            self.mining = False
+        self.activity_stop.set()
+        self.mining_stop.set()
+
     def _start_moving(self):
-        while not self.mining_stop.is_set():
-            self.mouse.press(Button.left)
+        try:
+            while not self.mining_stop.is_set():
+                self.input.press_mouse("left")
 
-            if config.fast_pickaxe:
-                horizontal_delay = (config.horizontal_stones / 4) - 0.2
-                vertical_delay = (config.vertical_stones / 4) - 0.2
+                if config.fast_pickaxe:
+                    horizontal_delay = (config.horizontal_stones / 4) - 0.2
+                    vertical_delay = (config.vertical_stones / 4) - 0.2
 
-                self.keyboard.press("d")
-                if self._sleep(horizontal_delay, self.mining_stop):
-                    break
-                self.keyboard.release("d")
-
-                if config.vertical_stones > 0:
-                    self.keyboard.press("w")
-                    if self._sleep(vertical_delay, self.mining_stop):
+                    self.input.press_key("d")
+                    if self._sleep(horizontal_delay, self.mining_stop):
                         break
-                    self.keyboard.release("w")
+                    self.input.release_key("d")
 
-                self.keyboard.press("a")
-                if self._sleep(horizontal_delay, self.mining_stop):
-                    break
-                self.keyboard.release("a")
+                    if config.vertical_stones > 0:
+                        self.input.press_key("w")
+                        if self._sleep(vertical_delay, self.mining_stop):
+                            break
+                        self.input.release_key("w")
 
-                if config.vertical_stones > 0:
-                    self.keyboard.press("s")
-                    if self._sleep(vertical_delay, self.mining_stop):
+                    self.input.press_key("a")
+                    if self._sleep(horizontal_delay, self.mining_stop):
                         break
-                    self.keyboard.release("s")
-            elif self._sleep(5, self.mining_stop):
-                break
+                    self.input.release_key("a")
 
-            self.activity_rounds += 1
-            self.cobblex_rounds += 1
-            self.drop_rounds += 1
-            self.eat_rounds += 1
+                    if config.vertical_stones > 0:
+                        self.input.press_key("s")
+                        if self._sleep(vertical_delay, self.mining_stop):
+                            break
+                        self.input.release_key("s")
+                elif self._sleep(5, self.mining_stop):
+                    break
 
-        self.release_all()
+                self.activity_rounds += 1
+                self.cobblex_rounds += 1
+                self.drop_rounds += 1
+                self.eat_rounds += 1
+        except BackgroundInputError as exc:
+            self._fail_active_run(f"Tryb w tle został przerwany: {exc}")
+        finally:
+            self.release_all()
 
     def _drop_slot(self, x, y):
-        self.mouse.position = (x, y)
+        self.input.move_mouse(x, y)
         time.sleep(0.05)
-        self.mouse.click(Button.left)
+        self.input.click_mouse("left")
         time.sleep(0.05)
-        self.mouse.click(Button.right)
+        self.input.click_mouse("right")
         time.sleep(0.05)
-        self.mouse.position = (config.slots["drop_x"], config.slots["drop_y"])
+        self.input.move_mouse(config.slots["drop_x"], config.slots["drop_y"])
         time.sleep(0.05)
-        self.mouse.click(Button.left)
+        self.input.click_mouse("left")
         time.sleep(0.05)
-        self.mouse.position = (x, y)
+        self.input.move_mouse(x, y)
         time.sleep(0.05)
 
     def _calculate_inventory_mouse_position(self, slot):
@@ -186,8 +230,7 @@ class MiningController:
 
     def _drop(self):
         time.sleep(0.25)
-        self.keyboard.press("e")
-        self.keyboard.release("e")
+        self.input.tap_key("e")
         time.sleep(0.25)
 
         for slot in [int(x) for x in config.drop_slots]:
@@ -195,75 +238,78 @@ class MiningController:
             self._drop_slot(x, y)
 
         time.sleep(0.25)
-        self.keyboard.press("e")
-        self.keyboard.release("e")
+        self.input.tap_key("e")
         time.sleep(0.25)
 
     def _eat(self):
         time.sleep(0.1)
-        self.keyboard.press(str(config.food))
-        self.keyboard.release(str(config.food))
+        self.input.tap_key(str(config.food))
         time.sleep(0.1)
-        self.mouse.press(Button.right)
+        self.input.press_mouse("right")
         time.sleep(3)
-        self.mouse.release(Button.right)
+        self.input.release_mouse("right")
         time.sleep(0.1)
-        self.keyboard.press(str(config.pickaxe))
-        self.keyboard.release(str(config.pickaxe))
+        self.input.tap_key(str(config.pickaxe))
 
     def _send_command(self, command):
-        self.mouse.release(Button.right)
-        self.keyboard.press("t")
-        self.keyboard.release("t")
+        self.input.release_mouse("right")
+        self.input.tap_key("t")
         time.sleep(0.2)
-        self.keyboard.press("/")
-        self.keyboard.release("/")
-        time.sleep(0.2)
-        self.keyboard.type(command)
-        self.keyboard.press(Key.enter)
-        self.keyboard.release(Key.enter)
+        self.input.type_text(f"/{command}")
+        self.input.tap_key("enter")
         time.sleep(config.commands_delay_in_seconds)
 
     def _activity(self):
-        while not self.activity_stop.is_set():
-            should_pause = (
-                self.activity_rounds >= config.activity_rounds_config
-                or self.cobblex_rounds >= config.cobblex_rounds_config
-                or self.drop_rounds >= config.drop_rounds_config
-                or (1 <= config.food <= 9 and self.eat_rounds >= config.eat_rounds_config)
-            )
+        try:
+            while not self.activity_stop.is_set():
+                self._activity_step()
+        except BackgroundInputError as exc:
+            self._fail_active_run(f"Tryb w tle został przerwany: {exc}")
 
-            if not should_pause:
-                self.activity_stop.wait(0.1)
-                continue
+    def _activity_step(self):
+        should_pause = (
+            self.activity_rounds >= config.activity_rounds_config
+            or self.cobblex_rounds >= config.cobblex_rounds_config
+            or self.drop_rounds >= config.drop_rounds_config
+            or (1 <= config.food <= 9 and self.eat_rounds >= config.eat_rounds_config)
+        )
 
-            self.mining_stop.set()
-            self._join_thread(self.mining_thread)
+        if not should_pause:
+            self.activity_stop.wait(0.1)
+            return
 
-            if self.activity_stop.is_set():
-                break
+        self.mining_stop.set()
+        self._join_thread(self.mining_thread)
 
-            if self.activity_rounds >= config.activity_rounds_config:
-                for command in config.activity_commands:
-                    self._send_command(command)
-                self.activity_rounds = 0
+        if self.activity_stop.is_set():
+            return
 
-            if self.cobblex_rounds >= config.cobblex_rounds_config:
-                for command in config.cobblex_commands:
-                    self._send_command(command)
-                self.cobblex_rounds = 0
+        if self.activity_rounds >= config.activity_rounds_config:
+            for command in config.activity_commands:
+                self._send_command(command)
+            self.activity_rounds = 0
 
-            if self.drop_rounds >= config.drop_rounds_config:
+        if self.cobblex_rounds >= config.cobblex_rounds_config:
+            for command in config.cobblex_commands:
+                self._send_command(command)
+            self.cobblex_rounds = 0
+
+        if self.drop_rounds >= config.drop_rounds_config:
+            if self.active_mode == BACKGROUND_MODE:
+                if not self.drop_skip_logged:
+                    self.log("Wyrzucanie itemów jest dostępne tylko w trybie na pierwszym planie.")
+                    self.drop_skip_logged = True
+            else:
                 self._drop()
-                self.drop_rounds = 0
+            self.drop_rounds = 0
 
-            if 1 <= config.food <= 9 and self.eat_rounds >= config.eat_rounds_config:
-                self._eat()
-                self.eat_rounds = 0
+        if 1 <= config.food <= 9 and self.eat_rounds >= config.eat_rounds_config:
+            self._eat()
+            self.eat_rounds = 0
 
-            if self.activity_stop.wait(1):
-                break
+        if self.activity_stop.wait(1):
+            return
 
-            self.mining_stop.clear()
-            self.mining_thread = threading.Thread(target=self._start_moving, daemon=True)
-            self.mining_thread.start()
+        self.mining_stop.clear()
+        self.mining_thread = threading.Thread(target=self._start_moving, daemon=True)
+        self.mining_thread.start()
