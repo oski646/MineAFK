@@ -74,6 +74,31 @@ class InputBackendTests(unittest.TestCase):
         self.assertEqual([window.title for window in windows], ["Minecraft 1.20.1", "Notepad"])
         self.assertEqual(find_minecraft_window(windows).title, "Minecraft 1.20.1")
 
+    def test_selects_lunar_before_version_title(self):
+        windows = [
+            WindowTarget(hwnd=1, title="Notepad"),
+            WindowTarget(hwnd=2, title="Client 1.21.11"),
+            WindowTarget(hwnd=3, title="Lunar Client"),
+        ]
+
+        self.assertEqual(find_minecraft_window(windows).title, "Lunar Client")
+
+    def test_selects_minecraft_before_lunar_title(self):
+        windows = [
+            WindowTarget(hwnd=1, title="Lunar Client"),
+            WindowTarget(hwnd=2, title="Minecraft 1.21.11"),
+        ]
+
+        self.assertEqual(find_minecraft_window(windows).title, "Minecraft 1.21.11")
+
+    def test_selects_version_title_when_minecraft_and_lunar_are_missing(self):
+        windows = [
+            WindowTarget(hwnd=1, title="Notepad"),
+            WindowTarget(hwnd=2, title="Game 1.21.11"),
+        ]
+
+        self.assertEqual(find_minecraft_window(windows).title, "Game 1.21.11")
+
     def test_win32_backend_posts_probe_and_input_messages(self):
         api = FakeWin32Api()
         con = FakeWin32Con()

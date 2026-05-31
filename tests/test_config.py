@@ -23,6 +23,7 @@ class ConfigTests(unittest.TestCase):
         self.assertTrue(config.CONFIG_PATH.exists())
         self.assertEqual(config.version, "0.7.0 BETA")
         self.assertEqual(config.horizontal_stones, 7)
+        self.assertEqual(config.mobgrinder_click_interval, 0.75)
         self.assertTrue(config.enable_eating)
         self.assertTrue(config.enable_dropping_items)
         self.assertTrue(config.enable_activity_commands)
@@ -41,11 +42,12 @@ class ConfigTests(unittest.TestCase):
         old_config = "\n".join(
             line
             for line in config.DEFAULT_CONFIG.splitlines()
-            if not line.startswith("enable_")
+            if not line.startswith("enable_") and not line.startswith("mobgrinder_click_interval")
         )
 
         config.save_config_text(old_config)
 
+        self.assertEqual(config.mobgrinder_click_interval, 0.75)
         self.assertTrue(config.enable_eating)
         self.assertTrue(config.enable_dropping_items)
         self.assertTrue(config.enable_activity_commands)
@@ -65,6 +67,7 @@ class ConfigTests(unittest.TestCase):
             "cobblex_rounds": "3",
             "cobblex_commands": "cx",
             "commands_delay_in_seconds": "0,5",
+            "mobgrinder_click_interval": "0,25",
             "fast_pickaxe": True,
             "enable_eating": False,
             "enable_dropping_items": True,
@@ -82,6 +85,7 @@ class ConfigTests(unittest.TestCase):
         self.assertEqual(config.version, "0.7.0 BETA")
         self.assertEqual(config.horizontal_stones, 8)
         self.assertEqual(config.commands_delay_in_seconds, 0.5)
+        self.assertEqual(config.mobgrinder_click_interval, 0.25)
         self.assertEqual(config.drop_slots, ["1", "2", "3"])
         self.assertFalse(config.enable_eating)
         self.assertTrue(config.enable_dropping_items)
@@ -102,6 +106,7 @@ class ConfigTests(unittest.TestCase):
             "cobblex_rounds": "3",
             "cobblex_commands": "cx",
             "commands_delay_in_seconds": "1",
+            "mobgrinder_click_interval": "0,5",
             "fast_pickaxe": True,
             "enable_eating": True,
             "enable_dropping_items": True,

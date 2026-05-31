@@ -18,6 +18,9 @@ class FakeInputBackend:
     def release_mouse(self, button):
         self.events.append(("release_mouse", button))
 
+    def click_mouse(self, button):
+        self.events.append(("click_mouse", button))
+
     def release_all(self):
         self.events.append(("release_all", None))
 
@@ -35,6 +38,22 @@ class AfkControllerTests(unittest.TestCase):
 
         self.assertIn(("press_mouse", "right"), controller.foreground_backend.events)
         self.assertNotIn(("press_mouse", "left"), controller.foreground_backend.events)
+        self.assertFalse(controller.is_running())
+
+    def test_mobgrinder_clicks_left_mouse_until_stopped(self):
+        logs = []
+        with (
+            patch("modules.afk_controller.PynputInputBackend", FakeInputBackend),
+            patch("modules.afk_controller.config.reload", return_value=None),
+            patch("modules.afk_controller.config.mobgrinder_click_interval", 0.01),
+        ):
+            controller = AfkController(log=logs.append)
+            controller.start_mobgrinder()
+            self._wait_until(lambda: controller.foreground_backend.events.count(("click_mouse", "left")) >= 2)
+
+        controller.stop()
+
+        self.assertGreaterEqual(controller.foreground_backend.events.count(("click_mouse", "left")), 2)
         self.assertFalse(controller.is_running())
 
     def _wait_until(self, condition):

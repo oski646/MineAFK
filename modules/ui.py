@@ -27,14 +27,15 @@ class MineAfkApp(tk.Tk):
     def __init__(self):
         super().__init__()
         self.title("MineAFK")
-        self.geometry("760x740")
-        self.minsize(680, 680)
+        self.geometry("760x1000")
+        self.minsize(680, 940)
         self.log_queue = queue.Queue()
-        self.mode_var = tk.StringVar(value=FOREGROUND_MODE)
         self.window_var = tk.StringVar()
         self.window_targets = []
         self.window_by_display = {}
         self.background_available = is_background_input_supported()
+        default_mode = BACKGROUND_MODE if self.background_available else FOREGROUND_MODE
+        self.mode_var = tk.StringVar(value=default_mode)
 
         try:
             self.iconbitmap(default=str(resource_path("pickaxe.ico")))
@@ -52,7 +53,7 @@ class MineAfkApp(tk.Tk):
         self._poll_logs()
         self.afk.start_hotkeys()
         self.protocol("WM_DELETE_WINDOW", self._on_close)
-        self.log("Gotowe. Wybierz kopanie albo łowienie AFK. F8 uruchamia kopanie, F9 zatrzymuje AFK.")
+        self.log("Gotowe. Wybierz kopanie, łowienie albo mobgrinder AFK. F8 uruchamia kopanie, F9 zatrzymuje AFK.")
 
     def _build_ui(self):
         self.columnconfigure(0, weight=1)
@@ -63,11 +64,12 @@ class MineAfkApp(tk.Tk):
         header.columnconfigure(0, weight=1)
 
         ttk.Label(header, text="MineAFK", font=("Segoe UI", 18, "bold")).grid(row=0, column=0, sticky="w")
-        ttk.Label(header, text="Lekki panel do kopania i łowienia AFK oraz konfiguracji slotów.").grid(row=1, column=0, sticky="w")
+        ttk.Label(header, text="Lekki panel do kopania, łowienia i mobgrindera AFK oraz konfiguracji slotów.").grid(row=1, column=0, sticky="w")
 
         controls = ttk.LabelFrame(self, text="Sterowanie AFK", padding=12)
         controls.grid(row=1, column=0, sticky="ew", padx=16, pady=8)
-        controls.columnconfigure(4, weight=1)
+        controls.columnconfigure(2, weight=1)
+        controls.columnconfigure(3, weight=1)
 
         ttk.Label(controls, text="Tryb:").grid(row=0, column=0, sticky="w", padx=(0, 8))
         ttk.Radiobutton(
@@ -92,16 +94,18 @@ class MineAfkApp(tk.Tk):
         self.status_label.grid(row=0, column=4, sticky="e")
 
         ttk.Label(controls, text="Kopanie:").grid(row=1, column=0, sticky="w", padx=(0, 8), pady=(10, 0))
-        ttk.Button(controls, text="Uruchom kopanie", command=self._start_mining).grid(row=1, column=1, sticky="w", padx=(0, 8), pady=(10, 0))
-        ttk.Label(controls, text="Łowienie:").grid(row=1, column=2, sticky="w", padx=(8, 8), pady=(10, 0))
-        ttk.Button(controls, text="Uruchom łowienie", command=self._start_fishing).grid(row=1, column=3, sticky="w", padx=(0, 8), pady=(10, 0))
-        ttk.Button(controls, text="Zatrzymaj", command=self._stop_afk_async).grid(row=1, column=4, sticky="e", pady=(10, 0))
+        self._start_button(controls, "▶ Kopanie", self._start_mining).grid(row=1, column=1, sticky="w", padx=(0, 8), pady=(10, 0))
+        ttk.Label(controls, text="Łowienie:").grid(row=2, column=0, sticky="w", padx=(0, 8), pady=(8, 0))
+        self._start_button(controls, "▶ Łowienie", self._start_fishing).grid(row=2, column=1, sticky="w", padx=(0, 8), pady=(8, 0))
+        ttk.Label(controls, text="Mobgrinder:").grid(row=3, column=0, sticky="w", padx=(0, 8), pady=(8, 0))
+        self._start_button(controls, "▶ Mobgrinder", self._start_mobgrinder).grid(row=3, column=1, sticky="w", padx=(0, 8), pady=(8, 0))
+        self._stop_button(controls, "■ Zatrzymaj", self._stop_afk_async).grid(row=1, column=4, rowspan=3, sticky="ne", pady=(10, 0))
         self.target_label = ttk.Label(controls, text="Okno:")
         self.target_combo = ttk.Combobox(controls, textvariable=self.window_var, state="readonly", width=48)
         self.target_refresh = ttk.Button(controls, text="Odśwież", command=self._refresh_window_targets)
-        self.target_label.grid(row=2, column=0, sticky="w", pady=(10, 0), padx=(0, 8))
-        self.target_combo.grid(row=2, column=1, columnspan=3, sticky="ew", pady=(10, 0), padx=(0, 8))
-        self.target_refresh.grid(row=2, column=4, sticky="e", pady=(10, 0))
+        self.target_label.grid(row=4, column=0, sticky="w", pady=(10, 0), padx=(0, 8))
+        self.target_combo.grid(row=4, column=1, columnspan=3, sticky="ew", pady=(10, 0), padx=(0, 8))
+        self.target_refresh.grid(row=4, column=4, sticky="e", pady=(10, 0))
         self.target_widgets = [self.target_label, self.target_combo, self.target_refresh]
         self._on_mode_changed()
 
@@ -110,7 +114,7 @@ class MineAfkApp(tk.Tk):
         content.columnconfigure(0, weight=1)
         content.columnconfigure(1, weight=1)
         content.rowconfigure(0, weight=0)
-        content.rowconfigure(1, weight=1, minsize=240)
+        content.rowconfigure(1, weight=1, minsize=300)
 
         config_frame = ttk.LabelFrame(content, text="Aktualna konfiguracja", padding=12)
         config_frame.grid(row=0, column=0, sticky="nsew", padx=(0, 8), pady=8)
@@ -144,7 +148,7 @@ class MineAfkApp(tk.Tk):
 
         logs_frame = ttk.LabelFrame(content, text="Logi", padding=12)
         logs_frame.grid(row=1, column=0, columnspan=2, sticky="nsew", pady=(8, 0))
-        logs_frame.configure(height=240)
+        logs_frame.configure(height=300)
         logs_frame.grid_propagate(False)
         logs_frame.columnconfigure(0, weight=1)
         logs_frame.rowconfigure(0, weight=1)
@@ -169,6 +173,38 @@ class MineAfkApp(tk.Tk):
         footer.grid(row=3, column=0, sticky="ew")
         footer.columnconfigure(0, weight=1)
         ttk.Button(footer, text="Sprawdź aktualizacje", command=self._check_updates_async).grid(row=0, column=0, sticky="w")
+
+    def _start_button(self, parent, text, command):
+        return tk.Button(
+            parent,
+            text=text,
+            command=command,
+            background="#16803a",
+            foreground="white",
+            activebackground="#126c32",
+            activeforeground="white",
+            relief="raised",
+            borderwidth=1,
+            padx=10,
+            pady=3,
+            cursor="hand2",
+        )
+
+    def _stop_button(self, parent, text, command):
+        return tk.Button(
+            parent,
+            text=text,
+            command=command,
+            background="#b42318",
+            foreground="white",
+            activebackground="#8f1c13",
+            activeforeground="white",
+            relief="raised",
+            borderwidth=1,
+            padx=10,
+            pady=3,
+            cursor="hand2",
+        )
 
     def _on_mode_changed(self):
         visible = self.mode_var.get() == BACKGROUND_MODE
@@ -219,6 +255,10 @@ class MineAfkApp(tk.Tk):
         mode, target_window = self._selected_start_options()
         self.afk.start_fishing(mode=mode, target_window=target_window)
 
+    def _start_mobgrinder(self):
+        mode, target_window = self._selected_start_options()
+        self.afk.start_mobgrinder(mode=mode, target_window=target_window)
+
     def log(self, message):
         self.log_queue.put(message)
 
@@ -260,6 +300,7 @@ class MineAfkApp(tk.Tk):
             ("enable_dropping_items", "Wyrzucanie itemów:", "state"),
             ("enable_activity_commands", "Aktywność:", "state"),
             ("enable_cobblex", "Cobblex:", "state"),
+            ("mobgrinder_click_interval", "Mobgrinder:", "value"),
             ("activity_commands", "Komendy aktywności:", "value"),
             ("cobblex_commands", "Komendy cobblex:", "value"),
         ]
@@ -355,6 +396,7 @@ class MineAfkApp(tk.Tk):
                 "cobblex_rounds": str(config.cobblex_rounds_config),
                 "cobblex_commands": ",".join(config.cobblex_commands),
                 "commands_delay_in_seconds": str(config.commands_delay_in_seconds),
+                "mobgrinder_click_interval": str(config.mobgrinder_click_interval),
                 "fast_pickaxe": config.fast_pickaxe,
                 "enable_eating": config.enable_eating,
                 "enable_dropping_items": config.enable_dropping_items,
@@ -371,6 +413,7 @@ class MineAfkApp(tk.Tk):
             (
                 "Funkcje",
                 [
+                    ("fast_pickaxe", "Szybki kilof", "bool"),
                     ("enable_eating", "Jedzenie", "bool"),
                     ("enable_dropping_items", "Wyrzucanie itemów", "bool"),
                     ("enable_activity_commands", "Komendy aktywności", "bool"),
@@ -392,7 +435,7 @@ class MineAfkApp(tk.Tk):
                     ("cobblex_rounds", "Rundy cobblex", "entry"),
                     ("cobblex_commands", "Komendy cobblex (po przecinku)", "entry"),
                     ("commands_delay_in_seconds", "Odstęp między komendami w sekundach", "entry"),
-                    ("fast_pickaxe", "Szybki kilof", "bool"),
+                    ("mobgrinder_click_interval", "Odstęp kliknięć mobgrindera w sekundach", "entry"),
                 ],
             ),
             (
@@ -481,6 +524,7 @@ class MineAfkApp(tk.Tk):
         self._set_summary_state("enable_dropping_items", config.enable_dropping_items)
         self._set_summary_state("enable_activity_commands", config.enable_activity_commands)
         self._set_summary_state("enable_cobblex", config.enable_cobblex)
+        self.config_summary_values["mobgrinder_click_interval"].configure(text=f"{config.mobgrinder_click_interval:g} s")
         self.config_summary_values["activity_commands"].configure(text=", ".join(config.activity_commands) or "-")
         self.config_summary_values["cobblex_commands"].configure(text=", ".join(config.cobblex_commands) or "-")
         self.log("Konfiguracja została odświeżona.")

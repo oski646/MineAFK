@@ -27,12 +27,15 @@ class AfkController:
         self.start_options = lambda: (FOREGROUND_MODE, None)
         self.mining = False
         self.fishing = False
+        self.mobgrinder = False
         self.mining_thread = None
         self.activity_thread = None
         self.fishing_thread = None
+        self.mobgrinder_thread = None
         self.mining_stop = threading.Event()
         self.activity_stop = threading.Event()
         self.fishing_stop = threading.Event()
+        self.mobgrinder_stop = threading.Event()
         self.lock = threading.Lock()
         self.hotkey_listener = None
         self.slot_reader_active = lambda: False
@@ -55,13 +58,15 @@ class AfkController:
         self.input.release_all()
 
     def is_running(self):
-        return self.mining or self.fishing
+        return self.mining or self.fishing or self.mobgrinder
 
     def active_activity_label(self):
         if self.mining:
             return "Kopanie"
         if self.fishing:
             return "Łowienie"
+        if self.mobgrinder:
+            return "Mobgrinder"
         return "Bezczynny"
 
     def start_hotkeys(self):
@@ -90,11 +95,8 @@ class AfkController:
 
     def start_mining(self, mode=FOREGROUND_MODE, target_window=None):
         with self.lock:
-            if self.mining:
-                self.log("Kopanie AFK już działa.")
-                return
-            if self.fishing:
-                self.log("Łowienie AFK już działa. Zatrzymaj je przed uruchomieniem kopania.")
+            if self.is_running():
+                self.log(f"{self.active_activity_label()} AFK już działa. Zatrzymaj aktualny tryb przed uruchomieniem kopania.")
                 return
 
             config.reload()
@@ -115,11 +117,8 @@ class AfkController:
 
     def start_fishing(self, mode=FOREGROUND_MODE, target_window=None):
         with self.lock:
-            if self.fishing:
-                self.log("Łowienie AFK już działa.")
-                return
-            if self.mining:
-                self.log("Kopanie AFK już działa. Zatrzymaj je przed uruchomieniem łowienia.")
+            if self.is_running():
+                self.log(f"{self.active_activity_label()} AFK już działa. Zatrzymaj aktualny tryb przed uruchomieniem łowienia.")
                 return
 
             self.input = self._create_input_backend(mode, target_window)
@@ -131,6 +130,23 @@ class AfkController:
             self.fishing_thread.start()
 
         self.log(f"Rozpoczęto łowienie AFK ({mode_label(self.active_mode)}).")
+
+    def start_mobgrinder(self, mode=FOREGROUND_MODE, target_window=None):
+        with self.lock:
+            if self.is_running():
+                self.log(f"{self.active_activity_label()} AFK już działa. Zatrzymaj aktualny tryb przed uruchomieniem mobgrindera.")
+                return
+
+            config.reload()
+            self.input = self._create_input_backend(mode, target_window)
+            self.active_mode = self.input.mode
+            self.mobgrinder_stop.clear()
+            self.mobgrinder = True
+
+            self.mobgrinder_thread = threading.Thread(target=self._start_mobgrinder, daemon=True)
+            self.mobgrinder_thread.start()
+
+        self.log(f"Rozpoczęto mobgrinder AFK ({mode_label(self.active_mode)}).")
 
     def _create_input_backend(self, mode, target_window):
         if mode != BACKGROUND_MODE:
@@ -151,15 +167,26 @@ class AfkController:
 
     def stop(self):
         with self.lock:
-            if not self.mining and not self.fishing:
+            if not self.mining and not self.fishing and not self.mobgrinder:
                 self.release_all()
                 self.log("AFK nie jest uruchomione.")
                 return
 
-            if self.fishing:
+            if self.mobgrinder:
+                self.log("Zatrzymywanie mobgrinder AFK...")
+                self.mobgrinder = False
+                self.mobgrinder_stop.set()
+                stopped_activity = "Mobgrinder"
+                mobgrinder_thread = self.mobgrinder_thread
+                fishing_thread = None
+                mining_thread = None
+                activity_thread = None
+            elif self.fishing:
                 self.log("Zatrzymywanie łowienia AFK...")
                 self.fishing = False
                 self.fishing_stop.set()
+                stopped_activity = "Łowienie"
+                mobgrinder_thread = None
                 fishing_thread = self.fishing_thread
                 mining_thread = None
                 activity_thread = None
@@ -168,6 +195,8 @@ class AfkController:
                 self.mining = False
                 self.activity_stop.set()
                 self.mining_stop.set()
+                stopped_activity = "Kopanie"
+                mobgrinder_thread = None
                 mining_thread = self.mining_thread
                 activity_thread = self.activity_thread
                 fishing_thread = None
@@ -175,20 +204,19 @@ class AfkController:
         self._join_thread(activity_thread)
         self._join_thread(mining_thread)
         self._join_thread(fishing_thread)
+        self._join_thread(mobgrinder_thread)
         self.release_all()
 
         with self.lock:
             self.mining_thread = None
             self.activity_thread = None
             self.fishing_thread = None
+            self.mobgrinder_thread = None
             self.input = self.foreground_backend
             self.active_mode = FOREGROUND_MODE
             self._reset_rounds()
 
-        if fishing_thread is not None:
-            self.log("Łowienie AFK zostało zatrzymane.")
-        else:
-            self.log("Kopanie AFK zostało zatrzymane.")
+        self.log(f"{stopped_activity} AFK zostało zatrzymane.")
 
     def _join_thread(self, thread):
         if thread and thread.is_alive() and thread is not threading.current_thread():
@@ -202,9 +230,11 @@ class AfkController:
         with self.lock:
             self.mining = False
             self.fishing = False
+            self.mobgrinder = False
         self.activity_stop.set()
         self.mining_stop.set()
         self.fishing_stop.set()
+        self.mobgrinder_stop.set()
 
     def _start_moving(self):
         try:
@@ -253,6 +283,17 @@ class AfkController:
             self.input.press_mouse("right")
             while not self.fishing_stop.wait(0.1):
                 pass
+        except BackgroundInputError as exc:
+            self._fail_active_run(f"Tryb w tle został przerwany: {exc}")
+        finally:
+            self.release_all()
+
+    def _start_mobgrinder(self):
+        try:
+            while not self.mobgrinder_stop.is_set():
+                self.input.click_mouse("left")
+                if self.mobgrinder_stop.wait(config.mobgrinder_click_interval):
+                    break
         except BackgroundInputError as exc:
             self._fail_active_run(f"Tryb w tle został przerwany: {exc}")
         finally:

@@ -21,6 +21,7 @@ activity_commands = repair all,craftuj-wszystko
 cobblex_rounds = 3
 cobblex_commands = cx
 commands_delay_in_seconds = 1
+mobgrinder_click_interval = 0.75
 fast_pickaxe = true
 enable_eating = true
 enable_dropping_items = true
@@ -173,6 +174,11 @@ def _load_values(parser):
         "drop_rounds_config": int(parser["Config"]["drop_rounds"]),
         "eat_rounds_config": int(parser["Config"]["eat_rounds"]),
         "commands_delay_in_seconds": float(parser["Config"]["commands_delay_in_seconds"]),
+        "mobgrinder_click_interval": (
+            _parse_float(parser["Config"], "mobgrinder_click_interval", "Odstęp kliknięć mobgrindera", minimum=0.05)
+            if "mobgrinder_click_interval" in parser["Config"]
+            else 0.75
+        ),
         "fast_pickaxe": parser["Config"]["fast_pickaxe"].lower() == "true",
         "enable_eating": _parse_bool(parser["Config"], "enable_eating", "Jedzenie") if "enable_eating" in parser["Config"] else True,
         "enable_dropping_items": _parse_bool(parser["Config"], "enable_dropping_items", "Wyrzucanie itemów") if "enable_dropping_items" in parser["Config"] else True,
@@ -194,7 +200,7 @@ def _apply_values(parser):
     global horizontal_stones, vertical_stones, pickaxe, food
     global drop_slots, activity_rounds_config, activity_commands
     global cobblex_rounds_config, cobblex_commands, drop_rounds_config
-    global eat_rounds_config, commands_delay_in_seconds, fast_pickaxe, slots
+    global eat_rounds_config, commands_delay_in_seconds, mobgrinder_click_interval, fast_pickaxe, slots
     global enable_eating, enable_dropping_items, enable_activity_commands, enable_cobblex
 
     values = _load_values(parser)
@@ -211,6 +217,7 @@ def _apply_values(parser):
     drop_rounds_config = values["drop_rounds_config"]
     eat_rounds_config = values["eat_rounds_config"]
     commands_delay_in_seconds = values["commands_delay_in_seconds"]
+    mobgrinder_click_interval = values["mobgrinder_click_interval"]
     fast_pickaxe = values["fast_pickaxe"]
     enable_eating = values["enable_eating"]
     enable_dropping_items = values["enable_dropping_items"]
@@ -238,6 +245,7 @@ def build_config_text(values):
     cobblex_rounds_value = _parse_int(values, "cobblex_rounds", "Rundy cobblex", minimum=1)
     cobblex_commands_value = _format_csv(_split_csv(str(values.get("cobblex_commands", ""))))
     commands_delay_value = _parse_float(values, "commands_delay_in_seconds", "Odstęp między komendami", minimum=0)
+    mobgrinder_click_interval_value = _parse_float(values, "mobgrinder_click_interval", "Odstęp kliknięć mobgrindera", minimum=0.05)
     fast_pickaxe_value = _parse_bool(values, "fast_pickaxe", "Szybki kilof")
     enable_eating_value = _parse_bool(values, "enable_eating", "Jedzenie")
     enable_dropping_items_value = _parse_bool(values, "enable_dropping_items", "Wyrzucanie itemów")
@@ -263,6 +271,7 @@ def build_config_text(values):
         f"cobblex_rounds = {cobblex_rounds_value}\n"
         f"cobblex_commands = {cobblex_commands_value}\n"
         f"commands_delay_in_seconds = {commands_delay_value:g}\n"
+        f"mobgrinder_click_interval = {mobgrinder_click_interval_value:g}\n"
         f"fast_pickaxe = {str(fast_pickaxe_value).lower()}\n"
         f"enable_eating = {str(enable_eating_value).lower()}\n"
         f"enable_dropping_items = {str(enable_dropping_items_value).lower()}\n"

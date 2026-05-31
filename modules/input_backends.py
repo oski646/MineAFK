@@ -1,3 +1,4 @@
+import re
 import sys
 import time
 from dataclasses import dataclass
@@ -69,9 +70,16 @@ def enumerate_windows(win32gui_module=None):
 
 
 def find_minecraft_window(windows):
-    for window in windows:
-        if "minecraft" in window.title.lower():
-            return window
+    matchers = [
+        lambda title: "minecraft" in title.lower(),
+        lambda title: "lunar" in title.lower(),
+        lambda title: re.search(r"\b\d+\.\d+\.\d+\b", title) is not None,
+    ]
+
+    for matcher in matchers:
+        for window in windows:
+            if matcher(window.title):
+                return window
     return windows[0] if windows else None
 
 
