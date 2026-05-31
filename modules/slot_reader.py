@@ -1,4 +1,3 @@
-import configparser
 import threading
 import time
 
@@ -88,7 +87,7 @@ class SlotReader:
         time.sleep(2)
         self.test()
         time.sleep(1)
-        self.log("Test czytnika slotów zakończony. Pozycje zostaną automatycznie zapisane do config.ini.")
+        self.log("Test czytnika slotów zakończony. Pozycje zostaną automatycznie zapisane w lokalnej konfiguracji użytkownika.")
         self.save_to_config()
         self.on_complete(self.result)
 
@@ -112,16 +111,5 @@ class SlotReader:
             self.log("Brak zapisanych pozycji slotów.")
             return
 
-        parser = configparser.ConfigParser()
-        parser.read(config.CONFIG_PATH)
-        if "Slots" not in parser:
-            parser["Slots"] = {}
-
-        for key, value in self.result.items():
-            parser["Slots"][key] = str(value)
-
-        with open(config.CONFIG_PATH, "w") as config_file:
-            parser.write(config_file)
-
-        config.reload()
-        self.log("Pozycje slotów zapisane do config.ini.")
+        config.update_slots(self.result)
+        self.log(f"Pozycje slotów zapisane do {config.CONFIG_PATH}.")

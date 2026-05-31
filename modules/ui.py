@@ -112,9 +112,13 @@ class MineAfkApp(tk.Tk):
         config_frame = ttk.LabelFrame(content, text="Aktualna konfiguracja", padding=12)
         config_frame.grid(row=0, column=0, sticky="nsew", padx=(0, 8), pady=8)
         config_frame.columnconfigure(0, weight=1)
-        self.config_summary = ttk.Label(config_frame, justify="left")
-        self.config_summary.grid(row=0, column=0, sticky="nw")
-        ttk.Button(config_frame, text="Odśwież konfigurację", command=self._refresh_config_summary).grid(row=1, column=0, sticky="w", pady=(10, 0))
+        self.config_summary_values = {}
+        self.config_summary_state_labels = {}
+        self._build_config_summary(config_frame)
+        button_bar = ttk.Frame(config_frame)
+        button_bar.grid(row=1, column=0, sticky="ew", pady=(10, 0))
+        ttk.Button(button_bar, text="Odśwież konfigurację", command=self._refresh_config_summary).grid(row=0, column=0, sticky="w", padx=(0, 8))
+        ttk.Button(button_bar, text="Edytuj konfigurację", command=self._open_config_form).grid(row=0, column=1, sticky="w")
 
         slot_frame = ttk.LabelFrame(content, text="Czytnik slotów", padding=12)
         slot_frame.grid(row=0, column=1, sticky="nsew", padx=(8, 0), pady=8)
@@ -130,7 +134,7 @@ class MineAfkApp(tk.Tk):
         ttk.Button(slot_frame, text="Anuluj", command=self.slot_reader.cancel).grid(row=1, column=1, sticky="ew", pady=(10, 0))
         ttk.Label(
             slot_frame,
-            text="Po zakończeniu testu pozycje zostaną zapisane automatycznie do config.ini.",
+            text="Po zakończeniu testu pozycje zostaną zapisane automatycznie w lokalnej konfiguracji użytkownika.",
             wraplength=240,
             justify="left",
         ).grid(row=2, column=0, columnspan=2, sticky="w", pady=(8, 0))
@@ -237,23 +241,250 @@ class MineAfkApp(tk.Tk):
         self.log_text.see("end")
         self.log_text.configure(state="disabled")
 
+    def _build_config_summary(self, parent):
+        summary = ttk.Frame(parent)
+        summary.grid(row=0, column=0, sticky="ew")
+        summary.columnconfigure(1, weight=1)
+
+        rows = [
+            ("stones", "Stoniarki:", "value"),
+            ("enable_eating", "Jedzenie:", "state"),
+            ("enable_dropping_items", "Wyrzucanie itemów:", "state"),
+            ("enable_activity_commands", "Aktywność:", "state"),
+            ("enable_cobblex", "Cobblex:", "state"),
+            ("activity_commands", "Komendy aktywności:", "value"),
+            ("cobblex_commands", "Komendy cobblex:", "value"),
+        ]
+
+        for row_index, (key, label, row_type) in enumerate(rows):
+            ttk.Label(summary, text=label).grid(row=row_index, column=0, sticky="nw", padx=(0, 8), pady=1)
+            value_label = ttk.Label(summary, wraplength=240, justify="left")
+            value_label.grid(row=row_index, column=1, sticky="ew", pady=1)
+            self.config_summary_values[key] = value_label
+            if row_type == "state":
+                self.config_summary_state_labels[key] = value_label
+
+    def _open_config_form(self):
+        existing_editor = getattr(self, "config_editor", None)
+        if existing_editor is not None and existing_editor.winfo_exists():
+            existing_editor.lift()
+            existing_editor.focus_force()
+            return
+
+        editor = tk.Toplevel(self)
+        self.config_editor = editor
+        editor.title("MineAFK - konfiguracja")
+        editor.geometry("700x620")
+        editor.minsize(560, 420)
+        editor.transient(self)
+        editor.columnconfigure(0, weight=1)
+        editor.rowconfigure(1, weight=1)
+
+        header = ttk.Frame(editor, padding=(12, 12, 12, 6))
+        header.grid(row=0, column=0, columnspan=2, sticky="ew")
+        header.columnconfigure(0, weight=1)
+        ttk.Label(header, text=f"Plik: {config.CONFIG_PATH}", wraplength=660).grid(row=0, column=0, sticky="w")
+
+        canvas = tk.Canvas(editor, borderwidth=0, highlightthickness=0)
+        canvas.grid(row=1, column=0, sticky="nsew", padx=(12, 0), pady=(0, 8))
+        y_scrollbar = ttk.Scrollbar(editor, orient="vertical", command=canvas.yview)
+        y_scrollbar.grid(row=1, column=1, sticky="ns", pady=(0, 8))
+        canvas.configure(yscrollcommand=y_scrollbar.set)
+
+        def scroll_form(event):
+            if getattr(event, "num", None) == 4:
+                canvas.yview_scroll(-3, "units")
+            elif getattr(event, "num", None) == 5:
+                canvas.yview_scroll(3, "units")
+            elif event.delta:
+                steps = int(-1 * (event.delta / 120))
+                if steps == 0:
+                    steps = -1 if event.delta > 0 else 1
+                canvas.yview_scroll(steps, "units")
+            return "break"
+
+        editor.bind("<MouseWheel>", scroll_form)
+        editor.bind("<Button-4>", scroll_form)
+        editor.bind("<Button-5>", scroll_form)
+
+        form = ttk.Frame(canvas, padding=(0, 0, 12, 0))
+        form_window = canvas.create_window((0, 0), window=form, anchor="nw")
+        canvas.bind("<Configure>", lambda event: canvas.itemconfigure(form_window, width=event.width))
+        form.bind("<Configure>", lambda event: canvas.configure(scrollregion=canvas.bbox("all")))
+        form.columnconfigure(0, weight=1)
+
+        fields = {}
+        bool_fields = {}
+        entry_widgets = {}
+        controlled_fields = {
+            "enable_eating": ["eat_rounds", "food"],
+            "enable_dropping_items": ["drop_rounds", "drop_slots", "first_row_x", "first_row_y", "drop_x", "drop_y", "difference"],
+            "enable_activity_commands": ["activity_rounds", "activity_commands"],
+            "enable_cobblex": ["cobblex_rounds", "cobblex_commands"],
+        }
+
+        def update_field_states():
+            for toggle_key, field_keys in controlled_fields.items():
+                enabled = bool_fields[toggle_key].get()
+                state = "normal" if enabled else "disabled"
+                for field_key in field_keys:
+                    widget = entry_widgets.get(field_key)
+                    if widget is not None:
+                        widget.configure(state=state)
+
+        def current_values():
+            config.reload()
+            return {
+                "horizontal_stones": str(config.horizontal_stones),
+                "vertical_stones": str(config.vertical_stones),
+                "pickaxe": str(config.pickaxe),
+                "eat_rounds": str(config.eat_rounds_config),
+                "food": str(config.food),
+                "drop_rounds": str(config.drop_rounds_config),
+                "drop_slots": ",".join(config.drop_slots),
+                "activity_rounds": str(config.activity_rounds_config),
+                "activity_commands": ",".join(config.activity_commands),
+                "cobblex_rounds": str(config.cobblex_rounds_config),
+                "cobblex_commands": ",".join(config.cobblex_commands),
+                "commands_delay_in_seconds": str(config.commands_delay_in_seconds),
+                "fast_pickaxe": config.fast_pickaxe,
+                "enable_eating": config.enable_eating,
+                "enable_dropping_items": config.enable_dropping_items,
+                "enable_activity_commands": config.enable_activity_commands,
+                "enable_cobblex": config.enable_cobblex,
+                "first_row_x": str(config.slots["first_row_x"]),
+                "first_row_y": str(config.slots["first_row_y"]),
+                "drop_x": str(config.slots["drop_x"]),
+                "drop_y": str(config.slots["drop_y"]),
+                "difference": str(config.slots["difference"]),
+            }
+
+        sections = [
+            (
+                "Funkcje",
+                [
+                    ("enable_eating", "Jedzenie", "bool"),
+                    ("enable_dropping_items", "Wyrzucanie itemów", "bool"),
+                    ("enable_activity_commands", "Komendy aktywności", "bool"),
+                    ("enable_cobblex", "Cobblex", "bool"),
+                ],
+            ),
+            (
+                "Config",
+                [
+                    ("horizontal_stones", "Stoniarki w szerokości", "entry"),
+                    ("vertical_stones", "Stoniarki przód/tył", "entry"),
+                    ("pickaxe", "Slot kilofa (1-9)", "entry"),
+                    ("eat_rounds", "Rundy jedzenia", "entry"),
+                    ("food", "Slot jedzenia (0-9)", "entry"),
+                    ("drop_rounds", "Rundy wyrzucania", "entry"),
+                    ("drop_slots", "Sloty do wyrzucenia (1-36, po przecinku)", "entry"),
+                    ("activity_rounds", "Rundy aktywności", "entry"),
+                    ("activity_commands", "Komendy aktywności (po przecinku)", "entry"),
+                    ("cobblex_rounds", "Rundy cobblex", "entry"),
+                    ("cobblex_commands", "Komendy cobblex (po przecinku)", "entry"),
+                    ("commands_delay_in_seconds", "Odstęp między komendami w sekundach", "entry"),
+                    ("fast_pickaxe", "Szybki kilof", "bool"),
+                ],
+            ),
+            (
+                "Slots",
+                [
+                    ("first_row_x", "Slot 1 X", "entry"),
+                    ("first_row_y", "Slot 1 Y", "entry"),
+                    ("drop_x", "Miejsce wyrzucania X", "entry"),
+                    ("drop_y", "Miejsce wyrzucania Y", "entry"),
+                    ("difference", "Odstęp slotów", "entry"),
+                ],
+            ),
+        ]
+
+        try:
+            values = current_values()
+        except Exception as exc:
+            messagebox.showerror("MineAFK", f"Nie udało się odczytać konfiguracji:\n{exc}", parent=editor)
+            editor.destroy()
+            return
+        first_entry = None
+        for row_index, (section_name, section_fields) in enumerate(sections):
+            section = ttk.LabelFrame(form, text=section_name, padding=12)
+            section.grid(row=row_index, column=0, sticky="ew", pady=(0, 10))
+            section.columnconfigure(1, weight=1)
+
+            for field_row, (key, label, field_type) in enumerate(section_fields):
+                ttk.Label(section, text=label).grid(row=field_row, column=0, sticky="w", padx=(0, 12), pady=4)
+                if field_type == "bool":
+                    variable = tk.BooleanVar(value=bool(values[key]))
+                    bool_fields[key] = variable
+                    command = update_field_states if key in controlled_fields else None
+                    ttk.Checkbutton(section, variable=variable, command=command).grid(row=field_row, column=1, sticky="w", pady=4)
+                else:
+                    variable = tk.StringVar(value=values[key])
+                    fields[key] = variable
+                    entry = ttk.Entry(section, textvariable=variable)
+                    entry_widgets[key] = entry
+                    entry.grid(row=field_row, column=1, sticky="ew", pady=4)
+                    first_entry = first_entry or entry
+
+        def load_from_disk():
+            try:
+                values_from_disk = current_values()
+            except Exception as exc:
+                messagebox.showerror("MineAFK", f"Nie udało się odczytać konfiguracji:\n{exc}", parent=editor)
+                return
+
+            for key, variable in fields.items():
+                variable.set(values_from_disk[key])
+            for key, variable in bool_fields.items():
+                variable.set(bool(values_from_disk[key]))
+            update_field_states()
+
+        def collect_values():
+            values_to_save = {key: variable.get() for key, variable in fields.items()}
+            values_to_save.update({key: variable.get() for key, variable in bool_fields.items()})
+            return values_to_save
+
+        def save_to_disk():
+            try:
+                config.save_config_values(collect_values())
+            except Exception as exc:
+                messagebox.showerror("MineAFK", f"Nie udało się zapisać konfiguracji:\n{exc}", parent=editor)
+                return
+
+            self._refresh_config_summary()
+            self.log(f"Konfiguracja została zapisana w {config.CONFIG_PATH}.")
+            editor.destroy()
+
+        actions = ttk.Frame(editor, padding=(12, 0, 12, 12))
+        actions.grid(row=2, column=0, columnspan=2, sticky="ew")
+        actions.columnconfigure(0, weight=1)
+        ttk.Button(actions, text="Wczytaj ponownie", command=load_from_disk).grid(row=0, column=0, sticky="w", padx=(0, 8))
+        ttk.Button(actions, text="Zapisz", command=save_to_disk).grid(row=0, column=1, sticky="e", padx=(0, 8))
+        ttk.Button(actions, text="Anuluj", command=editor.destroy).grid(row=0, column=2, sticky="e")
+
+        update_field_states()
+        if first_entry is not None:
+            first_entry.focus_set()
+
     def _refresh_config_summary(self):
         config.reload()
-        self.config_summary.configure(
-            text=(
-                f"Wersja: {config.version}\n"
-                f"Stoniarki: {config.horizontal_stones} x {config.vertical_stones}\n"
-                f"Slot kilofa: {config.pickaxe}\n"
-                f"Slot jedzenia: {config.food}\n"
-                f"Sloty do wyrzucenia: {', '.join(config.drop_slots)}\n"
-                f"Komendy aktywności: {', '.join(config.activity_commands)}\n"
-                f"Komendy cobblex: {', '.join(config.cobblex_commands)}\n"
-                f"Slot 1: {config.slots['first_row_x']}, {config.slots['first_row_y']}\n"
-                f"Miejsce wyrzucania: {config.slots['drop_x']}, {config.slots['drop_y']}\n"
-                f"Odstęp slotów: {config.slots['difference']}"
-            )
-        )
+        self.config_summary_values["stones"].configure(text=f"{config.horizontal_stones} x {config.vertical_stones}")
+        self._set_summary_state("enable_eating", config.enable_eating)
+        self._set_summary_state("enable_dropping_items", config.enable_dropping_items)
+        self._set_summary_state("enable_activity_commands", config.enable_activity_commands)
+        self._set_summary_state("enable_cobblex", config.enable_cobblex)
+        self.config_summary_values["activity_commands"].configure(text=", ".join(config.activity_commands) or "-")
+        self.config_summary_values["cobblex_commands"].configure(text=", ".join(config.cobblex_commands) or "-")
         self.log("Konfiguracja została odświeżona.")
+
+    def _set_summary_state(self, key, enabled):
+        self.config_summary_state_labels[key].configure(
+            text=self._enabled_label(enabled),
+            foreground="#16803a" if enabled else "#b42318",
+        )
+
+    def _enabled_label(self, enabled):
+        return "włączone" if enabled else "wyłączone"
 
     def _stop_mining_async(self):
         threading.Thread(target=self.mining.stop, daemon=True).start()
@@ -263,7 +494,7 @@ class MineAfkApp(tk.Tk):
 
     def _refresh_after_slot_reader(self):
         self._refresh_config_summary()
-        self.log("Czytnik slotów zakończył pracę. Config.ini został zaktualizowany automatycznie.")
+        self.log(f"Czytnik slotów zakończył pracę. Konfiguracja została zaktualizowana w {config.CONFIG_PATH}.")
 
     def _check_updates_async(self):
         threading.Thread(target=self._check_updates, daemon=True).start()

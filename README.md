@@ -34,16 +34,14 @@ Jeśli masz włączone lokalne skrypty PowerShell, możesz też uruchomić króc
 ## Instalacja automatyczna
 1. Pobierz najnowszą wersję paczki - [link](https://github.com/oski646/MineAFK/releases)
 2. Wypakuj paczkę
-3. W pliku `config` masz całą potrzebną konfigurację
+3. Konfigurację możesz edytować w aplikacji przyciskiem `Edytuj konfigurację`
 4. Włączenie:
 - aplikacji: kliknij dwa razy na ```MineAFK.exe```
 
 ## Objaśnienie configu
-```
-# (!) PROSZĘ TEGO NIE RUSZAĆ (!) #
-[Version]
-version = 0.7.0 BETA
+Aplikacja zapisuje konfigurację w lokalnym katalogu użytkownika. Na Windows jest to `%LOCALAPPDATA%\MineAFK\config.ini`. Jeśli plik jeszcze nie istnieje, aplikacja utworzy tam nową domyślną konfigurację.
 
+```
 [Config]
 horizontal_stones = 7 <-- ile jest stoniarek w szerokości
 vertical_stones = 2 <-- ile jest stoniarek przód/tył
@@ -58,6 +56,10 @@ cobblex_rounds = 2 <-- co ile rund ma się tworzyć cobblex
 cobblex_commands = cx,cx <-- komendy do wytworzenia cobblex
 commands_delay_in_seconds = 0.5 <-- odstęp w sekundach między wykonywaniem dwóch komend
 fast_pickaxe = true <-- czy kopanie jest na kilofie 6/3/3
+enable_eating = true <-- czy program ma jeść
+enable_dropping_items = true <-- czy program ma wyrzucać itemy
+enable_activity_commands = true <-- czy program ma wykonywać komendy aktywności
+enable_cobblex = true <-- czy program ma tworzyć cobblex
 
 # (!) TA CAŁA SEKCJA WAS NIE INTERESUJE (!) #
 # Jeśli chcecie coś tutaj zmieniać macie od tego "Slot reader" #

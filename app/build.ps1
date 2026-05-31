@@ -1,10 +1,9 @@
 $ErrorActionPreference = "Stop"
 $ProjectRoot = Resolve-Path (Join-Path $PSScriptRoot "..")
 $IconPath = Join-Path $ProjectRoot "pickaxe.ico"
+$VersionPath = Join-Path $ProjectRoot "version.txt"
 $EntryPoint = Join-Path $ProjectRoot "main.py"
 $SpecPath = Join-Path $ProjectRoot "build"
-$ConfigPath = Join-Path $ProjectRoot "config.ini"
-$DistConfigPath = Join-Path $ProjectRoot "dist\config.ini"
 $DistPath = Join-Path $ProjectRoot "dist"
 
 if (-not (Get-Command uv -ErrorAction SilentlyContinue)) {
@@ -28,9 +27,8 @@ try {
         }
     }
 
-    Invoke-Uv run --group build pyinstaller --clean --onefile --windowed --name MineAFK --specpath $SpecPath --icon $IconPath --add-data "${IconPath};." $EntryPoint
+    Invoke-Uv run --group build pyinstaller --clean --onefile --windowed --name MineAFK --specpath $SpecPath --icon $IconPath --add-data "${IconPath};." --add-data "${VersionPath};." $EntryPoint
 
-    Copy-Item -Path $ConfigPath -Destination $DistConfigPath -Force
 }
 finally {
     Pop-Location

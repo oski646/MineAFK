@@ -268,10 +268,10 @@ class MiningController:
 
     def _activity_step(self):
         should_pause = (
-            self.activity_rounds >= config.activity_rounds_config
-            or self.cobblex_rounds >= config.cobblex_rounds_config
-            or self.drop_rounds >= config.drop_rounds_config
-            or (1 <= config.food <= 9 and self.eat_rounds >= config.eat_rounds_config)
+            (config.enable_activity_commands and self.activity_rounds >= config.activity_rounds_config)
+            or (config.enable_cobblex and self.cobblex_rounds >= config.cobblex_rounds_config)
+            or (config.enable_dropping_items and self.drop_rounds >= config.drop_rounds_config)
+            or (config.enable_eating and 1 <= config.food <= 9 and self.eat_rounds >= config.eat_rounds_config)
         )
 
         if not should_pause:
@@ -284,17 +284,17 @@ class MiningController:
         if self.activity_stop.is_set():
             return
 
-        if self.activity_rounds >= config.activity_rounds_config:
+        if config.enable_activity_commands and self.activity_rounds >= config.activity_rounds_config:
             for command in config.activity_commands:
                 self._send_command(command)
             self.activity_rounds = 0
 
-        if self.cobblex_rounds >= config.cobblex_rounds_config:
+        if config.enable_cobblex and self.cobblex_rounds >= config.cobblex_rounds_config:
             for command in config.cobblex_commands:
                 self._send_command(command)
             self.cobblex_rounds = 0
 
-        if self.drop_rounds >= config.drop_rounds_config:
+        if config.enable_dropping_items and self.drop_rounds >= config.drop_rounds_config:
             if self.active_mode == BACKGROUND_MODE:
                 if not self.drop_skip_logged:
                     self.log("Wyrzucanie itemów jest dostępne tylko w trybie na pierwszym planie.")
@@ -303,7 +303,7 @@ class MiningController:
                 self._drop()
             self.drop_rounds = 0
 
-        if 1 <= config.food <= 9 and self.eat_rounds >= config.eat_rounds_config:
+        if config.enable_eating and 1 <= config.food <= 9 and self.eat_rounds >= config.eat_rounds_config:
             self._eat()
             self.eat_rounds = 0
 

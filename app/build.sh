@@ -11,5 +11,4 @@ case "$(uname -s 2>/dev/null || echo unknown)" in
     MINGW*|MSYS*|CYGWIN*) DATA_SEPARATOR=";" ;;
     *) DATA_SEPARATOR=":" ;;
 esac
-uv run --group build pyinstaller --clean --onefile --windowed --name MineAFK --specpath "$PROJECT_ROOT/build" --icon "$PROJECT_ROOT/pickaxe.ico" --add-data "$PROJECT_ROOT/pickaxe.ico${DATA_SEPARATOR}." "$PROJECT_ROOT/main.py"
-cp "$PROJECT_ROOT/config.ini" "$PROJECT_ROOT/dist/config.ini"
+uv run --group build pyinstaller --clean --onefile --windowed --name MineAFK --specpath "$PROJECT_ROOT/build" --icon "$PROJECT_ROOT/pickaxe.ico" --add-data "$PROJECT_ROOT/pickaxe.ico${DATA_SEPARATOR}." --add-data "$PROJECT_ROOT/version.txt${DATA_SEPARATOR}." "$PROJECT_ROOT/main.py"
