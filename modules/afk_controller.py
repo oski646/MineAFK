@@ -18,7 +18,7 @@ def mode_label(mode):
     }.get(mode, mode)
 
 
-class MiningController:
+class AfkController:
     def __init__(self, log=None):
         self.log = log or (lambda message: None)
         self.foreground_backend = PynputInputBackend()
@@ -26,10 +26,13 @@ class MiningController:
         self.active_mode = FOREGROUND_MODE
         self.start_options = lambda: (FOREGROUND_MODE, None)
         self.mining = False
+        self.fishing = False
         self.mining_thread = None
         self.activity_thread = None
+        self.fishing_thread = None
         self.mining_stop = threading.Event()
         self.activity_stop = threading.Event()
+        self.fishing_stop = threading.Event()
         self.lock = threading.Lock()
         self.hotkey_listener = None
         self.slot_reader_active = lambda: False
@@ -51,6 +54,16 @@ class MiningController:
     def release_all(self):
         self.input.release_all()
 
+    def is_running(self):
+        return self.mining or self.fishing
+
+    def active_activity_label(self):
+        if self.mining:
+            return "Kopanie"
+        if self.fishing:
+            return "Łowienie"
+        return "Bezczynny"
+
     def start_hotkeys(self):
         if self.hotkey_listener is not None:
             return
@@ -69,16 +82,19 @@ class MiningController:
             return
         if key == KeyboardManager.Key.f8:
             mode, target_window = self.start_options()
-            self.start(mode=mode, target_window=target_window)
+            self.start_mining(mode=mode, target_window=target_window)
         elif key == KeyboardManager.Key.f9:
             self.stop()
         elif key == KeyboardManager.Key.f10:
             self.release_all()
 
-    def start(self, mode=FOREGROUND_MODE, target_window=None):
+    def start_mining(self, mode=FOREGROUND_MODE, target_window=None):
         with self.lock:
             if self.mining:
                 self.log("Kopanie AFK już działa.")
+                return
+            if self.fishing:
+                self.log("Łowienie AFK już działa. Zatrzymaj je przed uruchomieniem kopania.")
                 return
 
             config.reload()
@@ -96,6 +112,25 @@ class MiningController:
             self.activity_thread.start()
 
         self.log(f"Rozpoczęto kopanie AFK ({mode_label(self.active_mode)}).")
+
+    def start_fishing(self, mode=FOREGROUND_MODE, target_window=None):
+        with self.lock:
+            if self.fishing:
+                self.log("Łowienie AFK już działa.")
+                return
+            if self.mining:
+                self.log("Kopanie AFK już działa. Zatrzymaj je przed uruchomieniem łowienia.")
+                return
+
+            self.input = self._create_input_backend(mode, target_window)
+            self.active_mode = self.input.mode
+            self.fishing_stop.clear()
+            self.fishing = True
+
+            self.fishing_thread = threading.Thread(target=self._start_fishing, daemon=True)
+            self.fishing_thread.start()
+
+        self.log(f"Rozpoczęto łowienie AFK ({mode_label(self.active_mode)}).")
 
     def _create_input_backend(self, mode, target_window):
         if mode != BACKGROUND_MODE:
@@ -116,30 +151,44 @@ class MiningController:
 
     def stop(self):
         with self.lock:
-            if not self.mining:
+            if not self.mining and not self.fishing:
                 self.release_all()
-                self.log("Kopanie AFK nie jest uruchomione.")
+                self.log("AFK nie jest uruchomione.")
                 return
 
-            self.log("Zatrzymywanie kopania AFK...")
-            self.mining = False
-            self.activity_stop.set()
-            self.mining_stop.set()
-            mining_thread = self.mining_thread
-            activity_thread = self.activity_thread
+            if self.fishing:
+                self.log("Zatrzymywanie łowienia AFK...")
+                self.fishing = False
+                self.fishing_stop.set()
+                fishing_thread = self.fishing_thread
+                mining_thread = None
+                activity_thread = None
+            else:
+                self.log("Zatrzymywanie kopania AFK...")
+                self.mining = False
+                self.activity_stop.set()
+                self.mining_stop.set()
+                mining_thread = self.mining_thread
+                activity_thread = self.activity_thread
+                fishing_thread = None
 
         self._join_thread(activity_thread)
         self._join_thread(mining_thread)
+        self._join_thread(fishing_thread)
         self.release_all()
 
         with self.lock:
             self.mining_thread = None
             self.activity_thread = None
+            self.fishing_thread = None
             self.input = self.foreground_backend
             self.active_mode = FOREGROUND_MODE
             self._reset_rounds()
 
-        self.log("Kopanie AFK zostało zatrzymane.")
+        if fishing_thread is not None:
+            self.log("Łowienie AFK zostało zatrzymane.")
+        else:
+            self.log("Kopanie AFK zostało zatrzymane.")
 
     def _join_thread(self, thread):
         if thread and thread.is_alive() and thread is not threading.current_thread():
@@ -152,8 +201,10 @@ class MiningController:
         self.log(message)
         with self.lock:
             self.mining = False
+            self.fishing = False
         self.activity_stop.set()
         self.mining_stop.set()
+        self.fishing_stop.set()
 
     def _start_moving(self):
         try:
@@ -192,6 +243,16 @@ class MiningController:
                 self.cobblex_rounds += 1
                 self.drop_rounds += 1
                 self.eat_rounds += 1
+        except BackgroundInputError as exc:
+            self._fail_active_run(f"Tryb w tle został przerwany: {exc}")
+        finally:
+            self.release_all()
+
+    def _start_fishing(self):
+        try:
+            self.input.press_mouse("right")
+            while not self.fishing_stop.wait(0.1):
+                pass
         except BackgroundInputError as exc:
             self._fail_active_run(f"Tryb w tle został przerwany: {exc}")
         finally:

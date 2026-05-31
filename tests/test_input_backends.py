@@ -90,6 +90,8 @@ class InputBackendTests(unittest.TestCase):
         backend.type_text("/cx")
         backend.press_mouse("left")
         backend.release_mouse("left")
+        backend.press_mouse("right")
+        backend.release_mouse("right")
 
         posted_messages = [message for _, message, _, _ in api.messages]
         self.assertIn(con.WM_NULL, posted_messages)
@@ -99,6 +101,8 @@ class InputBackendTests(unittest.TestCase):
         self.assertIn(con.WM_MOUSEMOVE, posted_messages)
         self.assertIn(con.WM_LBUTTONDOWN, posted_messages)
         self.assertIn(con.WM_LBUTTONUP, posted_messages)
+        self.assertIn(con.WM_RBUTTONDOWN, posted_messages)
+        self.assertIn(con.WM_RBUTTONUP, posted_messages)
 
 
 if __name__ == "__main__":
