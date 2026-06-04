@@ -13,8 +13,7 @@ Skrypt stworzony dla społeczności ludzi kopiących AFK na serwerach minecraft
 uv sync
 ```
 4. Włączenie:
-- skryptu: ```uv run python main.py```
-- slot readera: ```uv run python mouse-position.py```
+- aplikacji: ```uv run python main.py```
 
 ## Budowanie plików `.exe` na Windows
 1. Zainstaluj zależności
@@ -25,7 +24,7 @@ uv sync --group build
 ```
 powershell -ExecutionPolicy Bypass -File .\app\build.ps1
 ```
-3. Gotowe pliki znajdziesz w folderze `dist`.
+3. Gotowy plik `MineAFK.exe` znajdziesz w folderze `dist`.
 
 Jeśli masz włączone lokalne skrypty PowerShell, możesz też uruchomić krócej:
 ```
@@ -35,17 +34,14 @@ Jeśli masz włączone lokalne skrypty PowerShell, możesz też uruchomić króc
 ## Instalacja automatyczna
 1. Pobierz najnowszą wersję paczki - [link](https://github.com/oski646/MineAFK/releases)
 2. Wypakuj paczkę
-3. W pliku `config` masz całą potrzebną konfigurację
+3. Konfigurację możesz edytować w aplikacji przyciskiem `Edytuj konfigurację`
 4. Włączenie:
-- skryptu: kliknij dwa razy na ```Skrypt.exe```
-- slot readera: kliknij dwa razy na ```Slot reader.exe```
+- aplikacji: kliknij dwa razy na ```MineAFK.exe```
 
 ## Objaśnienie configu
-```
-# (!) PROSZĘ TEGO NIE RUSZAĆ (!) #
-[Version]
-version = 0.7.0 BETA
+Aplikacja zapisuje konfigurację w lokalnym katalogu użytkownika. Na Windows jest to `%LOCALAPPDATA%\MineAFK\config.ini`. Jeśli plik jeszcze nie istnieje, aplikacja utworzy tam nową domyślną konfigurację.
 
+```
 [Config]
 horizontal_stones = 7 <-- ile jest stoniarek w szerokości
 vertical_stones = 2 <-- ile jest stoniarek przód/tył
@@ -60,6 +56,10 @@ cobblex_rounds = 2 <-- co ile rund ma się tworzyć cobblex
 cobblex_commands = cx,cx <-- komendy do wytworzenia cobblex
 commands_delay_in_seconds = 0.5 <-- odstęp w sekundach między wykonywaniem dwóch komend
 fast_pickaxe = true <-- czy kopanie jest na kilofie 6/3/3
+enable_eating = true <-- czy program ma jeść
+enable_dropping_items = true <-- czy program ma wyrzucać itemy
+enable_activity_commands = true <-- czy program ma wykonywać komendy aktywności
+enable_cobblex = true <-- czy program ma tworzyć cobblex
 
 # (!) TA CAŁA SEKCJA WAS NIE INTERESUJE (!) #
 # Jeśli chcecie coś tutaj zmieniać macie od tego "Slot reader" #
@@ -81,7 +81,7 @@ difference = 36
  *Zawsze na slocie, który ma być wyrzucony zostanie wyrzucone **stack - 1** czyli jeśli mamy na slocie 64 złota to wyrzucimy tylko 63 aby zostawić 1 na tym slocie*
  
 ## Slot reader
-W celu poprawnego skonfigurowania slotów odpalamy `Slot reader.exe`. Skrypt odpala nam się i prosi o zeskanowanie sześciu pozycji. **(skanujemy sam środek slota)**
+W celu poprawnego skonfigurowania slotów odpalamy `MineAFK.exe` i klikamy `Start czytnika`. Aplikacja prosi o zeskanowanie slotu 1, slotu 2 i miejsca wyrzucania itemów klawiszem **F8**. **(skanujemy sam środek slota)**
 
 ![Zdjęcie](https://i.imgur.com/nyRreuU.png)
 
@@ -92,7 +92,7 @@ W celu poprawnego skonfigurowania slotów odpalamy `Slot reader.exe`. Skrypt odp
 ## Lista keybindów
 - **F8** - Wystartowanie kopania
 - **F9** - Zatrzymanie kopania
-- **F10** - Wyjście ze skryptu
+- **F10** - Zwolnienie przytrzymanych klawiszy i myszy
 
 ## FAQ
 ### Program został wykryty jako wirus. Co zrobić w takiej sytuacji?

@@ -1,21 +1,24 @@
-import modules.logger as logger
-import modules.config as config
-import requests
 import json
 
-def run():
-    logger.info("Sprawdzanie aktualizacji...")
-    response = requests.get("https://raw.githubusercontent.com/oski646/MineAFK/master/version.txt")
-    response_version = response.text
-    if response_version != config.version:
-        logger.info("Twoja wersja jest nieaktualna, pobierz aktualną z: https://github.com/oski646/MineAFK")
-        changes_response = requests.get("https://api.github.com/repos/oski646/MineAFK/commits/master")
-        changes_response = requests.get("https://api.github.com/repos/oski646/MineAFK/commits/master")
+import requests
+
+import modules.config as config
+import modules.logger as logger
+
+
+def run(log=None):
+    write_log = log or logger.info
+    write_log("Sprawdzanie aktualizacji...")
+
+    response = requests.get("https://raw.githubusercontent.com/oski646/MineAFK/master/version.txt", timeout=10)
+    response.raise_for_status()
+
+    if response.text.strip() != config.version:
+        write_log("Twoja wersja jest nieaktualna. Pobierz najnowszą wersję z: https://github.com/oski646/MineAFK")
+        changes_response = requests.get("https://api.github.com/repos/oski646/MineAFK/commits/master", timeout=10)
+        changes_response.raise_for_status()
         changes_json = json.loads(changes_response.text)
-        changes = changes_json["commit"]["message"]
-        print("")
-        print("Changelog")
-        print(changes)
-        print("")
+        write_log("Lista zmian")
+        write_log(changes_json["commit"]["message"])
     else:
-        logger.info("Posiadasz aktualną wersję skryptu.")
+        write_log("Masz najnowszą wersję skryptu.")
