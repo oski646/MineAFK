@@ -21,7 +21,7 @@ class ConfigTests(unittest.TestCase):
         config.reload()
 
         self.assertTrue(config.CONFIG_PATH.exists())
-        self.assertEqual(config.version, "0.7.0 BETA")
+        self.assertEqual(config.version, "0.8.0 BETA")
         self.assertEqual(config.horizontal_stones, 7)
         self.assertEqual(config.mobgrinder_click_interval, 0.75)
         self.assertTrue(config.enable_eating)
@@ -82,7 +82,7 @@ class ConfigTests(unittest.TestCase):
 
         config.save_config_values(values)
 
-        self.assertEqual(config.version, "0.7.0 BETA")
+        self.assertEqual(config.version, "0.8.0 BETA")
         self.assertEqual(config.horizontal_stones, 8)
         self.assertEqual(config.commands_delay_in_seconds, 0.5)
         self.assertEqual(config.mobgrinder_click_interval, 0.25)

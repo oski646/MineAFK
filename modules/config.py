@@ -6,7 +6,7 @@ from pathlib import Path
 APP_NAME = "MineAFK"
 CONFIG_FILENAME = "config.ini"
 VERSION_FILENAME = "version.txt"
-DEFAULT_VERSION = "0.7.0 BETA"
+DEFAULT_VERSION = "0.8.0 BETA"
 
 DEFAULT_CONFIG = """[Config]
 horizontal_stones = 7
